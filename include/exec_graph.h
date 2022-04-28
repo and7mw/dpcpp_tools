@@ -113,7 +113,8 @@ class ExecGraph {
     std::vector<std::shared_ptr<Edge>> edges;
 
 public:
-    void modifyExecGraph(uint16_t eventType, xpti::trace_event_data_t *event, xpti::metadata_t *metadata) {
+    void modifyExecGraph(uint16_t eventType, xpti::trace_event_data_t *event) {
+        xpti::metadata_t *metadata = xptiQueryMetadata(event);
         switch (eventType) {
             case static_cast<uint16_t>(xpti::trace_point_type_t::node_create): {
                 addNode(event, metadata);
