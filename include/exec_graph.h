@@ -15,8 +15,10 @@ struct PerfEntry {
 struct Edge;
 
 class Node {
-    uint64_t id;
+public:
     std::vector<PerfEntry> perfEntries;
+
+public:
     std::vector<std::weak_ptr<Edge>> inEdges, outEdges;
 
 public:
@@ -99,6 +101,10 @@ const std::unordered_set<std::string> MemoryNode::suppMemTransType = {
 };
 
 class Edge {
+public:
+    Edge(std::weak_ptr<Node> parent, std::weak_ptr<Node> child) : parent(parent), child(child) {}
+
+private:
     std::weak_ptr<Node> parent, child;
 };
 
@@ -114,15 +120,16 @@ public:
                 break;
             }
             case static_cast<uint16_t>(xpti::trace_point_type_t::edge_create): {
-
+                addEdge(event);
                 break;
             }
             case static_cast<uint16_t>(xpti::trace_point_type_t::task_begin): {
-
+                nodes[event->unique_id]->perfEntries.push_back(PerfEntry());
+                nodes[event->unique_id]->perfEntries.back().start = std::chrono::high_resolution_clock::now();
                 break;
             }
             case static_cast<uint16_t>(xpti::trace_point_type_t::task_end): {
-
+                nodes[event->unique_id]->perfEntries.back().end = std::chrono::high_resolution_clock::now();
                 break;
             }
             default: {
@@ -165,5 +172,14 @@ private:
                 throw std::runtime_error("Unknown node type!");
             }
         }
+    }
+
+    void addEdge(xpti::trace_event_data_t *event) {
+        const auto parent = nodes.at(event->source_id);
+        const auto child = nodes.at(event->target_id);
+
+        auto edge = std::make_shared<Edge>(parent, child);
+        parent->inEdges.push_back(edge);
+        parent->outEdges.push_back(edge);
     }
 };
