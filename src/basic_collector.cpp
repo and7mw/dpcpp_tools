@@ -106,7 +106,8 @@ XPTI_CALLBACK_API void tpCallback(uint16_t TraceType,
   std::string Name;
 
   if (Payload->name_sid != xpti::invalid_id) {
-    Name = truncate(Payload->name);
+    // Name = truncate(Payload->name);
+    Name = Payload->name;
   } else {
     Name = "<unknown>";
   }

@@ -1,7 +1,5 @@
-#include "foo.h"
+#include "exec_graph.h"
 
 int main() {
-    foo();
-
     return 0;
 }
