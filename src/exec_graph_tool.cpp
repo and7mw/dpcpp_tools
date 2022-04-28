@@ -52,7 +52,9 @@ XPTI_CALLBACK_API void xptiTraceInit(unsigned int major_version,
   }
 }
 
-XPTI_CALLBACK_API void xptiTraceFinish(const char *stream_name) {}
+XPTI_CALLBACK_API void xptiTraceFinish(const char *stream_name) {
+  printf("xptiTraceFinish: %lu %lu\n", execGraph->nodes.size(), execGraph->edges.size());
+}
 
 XPTI_CALLBACK_API void tpCallback(uint16_t TraceType,
                                   xpti::trace_event_data_t *Parent,

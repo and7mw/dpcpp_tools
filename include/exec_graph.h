@@ -38,7 +38,7 @@ public:
         }
     }
 
-    void serialize() const override;
+    void serialize() const override {}
 
 private:
     std::string name, device;
@@ -83,7 +83,7 @@ public:
         }
     }
 
-    void serialize() const override;
+    void serialize() const override {}
 
 private:
     std::string type, memObjPtr, addInfo, device;
@@ -109,6 +109,7 @@ private:
 };
 
 class ExecGraph {
+public:
     std::unordered_map<int64_t, std::shared_ptr<Node>> nodes;
     std::vector<std::shared_ptr<Edge>> edges;
 
@@ -137,6 +138,10 @@ public:
                 throw std::runtime_error("Can't handle event with id = " + std::to_string(eventType));
             }
         }
+    }
+
+    ~ExecGraph() {
+        printf("ExecGraph DTOR: %lu %lu\n", this->nodes.size(), this->edges.size());
     }
 
 private:
@@ -180,6 +185,8 @@ private:
         const auto child = nodes.at(event->target_id);
 
         auto edge = std::make_shared<Edge>(parent, child);
+        edges.push_back(edge);
+
         parent->inEdges.push_back(edge);
         parent->outEdges.push_back(edge);
     }
