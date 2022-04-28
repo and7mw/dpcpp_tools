@@ -6,6 +6,7 @@
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
+#include <fstream>
 #include "xpti_trace_framework.h"
 
 struct PerfEntry {
@@ -16,6 +17,7 @@ struct Edge;
 
 class Node {
 public:
+    int64_t id;
     std::vector<PerfEntry> perfEntries;
 
 public:
@@ -29,7 +31,8 @@ public:
 
 class KernelNode : public Node {
 public:
-    KernelNode(const std::string &name, xpti::metadata_t *metadata) : name(name) {
+    KernelNode(const std::string &name, xpti::metadata_t *metadata, int64_t id) : name(name) {
+        this->id = id;
         for (auto &it : *metadata) {
             if (xptiLookupString(it.first) == std::string("sycl_device")) {
                 device = xptiLookupString(it.second);
@@ -50,7 +53,9 @@ public:
     const static std::unordered_set<std::string> suppMemManagType;
     const static std::unordered_set<std::string> suppMemTransType;
 
-    MemoryNode(const std::string &name, xpti::metadata_t *metadata) {
+    MemoryNode(const std::string &name, xpti::metadata_t *metadata, int64_t id) {
+        this->id = id;
+
         type = name;
 
         const auto pos = name.find("[");
@@ -104,7 +109,7 @@ class Edge {
 public:
     Edge(std::weak_ptr<Node> parent, std::weak_ptr<Node> child) : parent(parent), child(child) {}
 
-private:
+public:
     std::weak_ptr<Node> parent, child;
 };
 
@@ -141,7 +146,22 @@ public:
     }
 
     ~ExecGraph() {
-        printf("ExecGraph DTOR: %lu %lu\n", this->nodes.size(), this->edges.size());
+        // printf("ExecGraph DTOR: %lu %lu\n", this->nodes.size(), this->edges.size());
+        std::ofstream dump;
+        dump.open("/home/maxim/master_science_work/dpcpp_tools/dump.dot");
+
+        dump << "digraph graphname {" << std::endl;
+        for (const auto& node : nodes) {
+            dump << "N" << node.first << ";" << std::endl;
+        }
+
+        for (const auto& edge : edges) {
+            dump << "N" << edge->child.lock()->id << " -> N" << edge->parent.lock()->id << ";" << std::endl;
+        }
+
+        dump << "}" << std::endl;
+
+        dump.close();
     }
 
 private:
@@ -164,7 +184,7 @@ private:
         }
 
         if (isKernel) {
-            nodes[event->unique_id] = std::make_shared<KernelNode>(name, metadata);
+            nodes[event->unique_id] = std::make_shared<KernelNode>(name, metadata, event->unique_id);
         } else {
             const auto pos = name.find("[");
             std::string memType = name;
@@ -173,7 +193,7 @@ private:
             }
 
             if (MemoryNode::suppMemManagType.count(memType) || MemoryNode::suppMemTransType.count(memType)) {
-                nodes[event->unique_id] = std::make_shared<MemoryNode>(name, metadata);
+                nodes[event->unique_id] = std::make_shared<MemoryNode>(name, metadata, event->unique_id);
             } else {
                 throw std::runtime_error("Unknown node type!");
             }
