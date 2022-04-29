@@ -7,7 +7,16 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <fstream>
+#include <iostream>
 #include "xpti_trace_framework.h"
+
+// #define DEBUG
+
+#ifdef DEBUG
+#define DBG_PRINT(x) x
+#else
+#define DBG_PRINT(x)
+#endif
 
 struct PerfEntry {
     std::chrono::high_resolution_clock::time_point start, end;
@@ -25,8 +34,21 @@ public:
 
 public:
     Node() = default;
-    virtual void serialize() const = 0;
+    virtual std::string serialize() const = 0;
     virtual ~Node() {};
+
+protected:
+    std::string getPertCounters() const {
+        uint64_t total = 0;
+
+        for (size_t i = 0; i < perfEntries.size(); i++) {
+            total += std::chrono::duration_cast<std::chrono::microseconds>(perfEntries[i].end - perfEntries[i].start).count();
+        }
+
+        std::string res = "Avg time: " + std::to_string(static_cast<float>(total) / perfEntries.size()) +
+                          " ms, launched " + std::to_string(perfEntries.size()) + " time";
+        return res;
+    }
 };
 
 class KernelNode : public Node {
@@ -41,7 +63,14 @@ public:
         }
     }
 
-    void serialize() const override {}
+    std::string serialize() const override {
+        std::string res;
+        res += "Kernel: " + name + "\n";
+        res += "Device: " + device + "\n";
+        res += getPertCounters();
+
+        return res;
+    }
 
 private:
     std::string name, device;
@@ -80,15 +109,28 @@ public:
             }
 
             if (!from.empty()) {
-                addInfo += "FROM: " + from + " ";
+                addInfo += "from: " + from + " ";
             }
             if (!to.empty()) {
-                addInfo += "TO: " + to;
+                addInfo += "to: " + to;
             }
         }
     }
 
-    void serialize() const override {}
+    std::string serialize() const override {
+        std::string res;
+        res += "Mem op type: " + type + "\n";
+        res += "Mem ptr: " + memObjPtr + "\n";
+        if (!device.empty()) {
+            res += "Device: " + device + "\n";
+        }
+        if (!addInfo.empty()) {
+            res += addInfo + "\n";
+        }
+        res += getPertCounters();
+
+        return res;
+    }
 
 private:
     std::string type, memObjPtr, addInfo, device;
@@ -123,10 +165,17 @@ public:
         xpti::metadata_t *metadata = xptiQueryMetadata(event);
         switch (eventType) {
             case static_cast<uint16_t>(xpti::trace_point_type_t::node_create): {
+                DBG_PRINT(std::cout << "node created with id: " << event->unique_id << std::endl;)
+
                 addNode(event, metadata);
                 break;
             }
             case static_cast<uint16_t>(xpti::trace_point_type_t::edge_create): {
+                DBG_PRINT(std::cout << "edge created"
+                                    << " parent: " << event->source_id
+                                    << " child: " << event->target_id
+                                    << std::endl;)
+
                 addEdge(event);
                 break;
             }
@@ -152,11 +201,12 @@ public:
 
         dump << "digraph graphname {" << std::endl;
         for (const auto& node : nodes) {
-            dump << "N" << node.first << ";" << std::endl;
+            dump << "N" << node.first << " [label=\"" << node.second->serialize() << "\"];" << std::endl;
         }
 
         for (const auto& edge : edges) {
-            dump << "N" << edge->child.lock()->id << " -> N" << edge->parent.lock()->id << ";" << std::endl;
+            dump << "N" << edge->parent.lock()->id << " -> N" << edge->child.lock()->id
+            << ";" << std::endl;
         }
 
         dump << "}" << std::endl;
