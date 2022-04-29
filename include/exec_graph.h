@@ -8,6 +8,7 @@
 #include <unordered_set>
 #include <fstream>
 #include <iostream>
+#include <functional>
 #include "xpti_trace_framework.h"
 
 // #define DEBUG
@@ -26,7 +27,7 @@ struct Edge;
 
 class Node {
 public:
-    int64_t id;
+    long id;
     std::vector<PerfEntry> perfEntries;
 
 public:
@@ -149,16 +150,40 @@ const std::unordered_set<std::string> MemoryNode::suppMemTransType = {
 
 class Edge {
 public:
-    Edge(std::weak_ptr<Node> parent, std::weak_ptr<Node> child) : parent(parent), child(child) {}
+    Edge(std::weak_ptr<Node> parent, std::weak_ptr<Node> child, std::string name) : parent(parent), child(child) {
+        this->name = name;
+        const auto pos = name.find("[");
+        if (pos != std::string::npos) {
+            this->name = name.substr(0, pos);
+        }
+    }
 
 public:
     std::weak_ptr<Node> parent, child;
+    std::string name;
 };
 
 class ExecGraph {
 public:
     std::unordered_map<int64_t, std::shared_ptr<Node>> nodes;
-    std::vector<std::shared_ptr<Edge>> edges;
+
+    struct edgeCompare {
+        bool operator()(const std::shared_ptr<Edge>& lhs, const std::shared_ptr<Edge>& rhs) const {
+            return lhs->parent.lock()->id == rhs->parent.lock()->id &&
+                   lhs->child.lock()->id == rhs->child.lock()->id &&
+                   lhs->name == rhs->name;
+        }
+    };
+
+    struct hash {
+        size_t operator()(const std::shared_ptr<Edge>& edge) const {
+            return std::hash<int64_t>{}(edge->parent.lock()->id) ^
+                   (std::hash<int64_t>{}(edge->child.lock()->id) << 1) ^
+                   (std::hash<std::string>{}(edge->name) << 2);
+        }
+    };
+
+    std::unordered_set<std::shared_ptr<Edge>, hash, edgeCompare> edges;
 
 public:
     void modifyExecGraph(uint16_t eventType, xpti::trace_event_data_t *event) {
@@ -206,7 +231,7 @@ public:
 
         for (const auto& edge : edges) {
             dump << "N" << edge->parent.lock()->id << " -> N" << edge->child.lock()->id
-            << ";" << std::endl;
+            << " [label=\"" << edge->name << "\"];" << std::endl;
         }
 
         dump << "}" << std::endl;
@@ -254,8 +279,15 @@ private:
         const auto parent = nodes.at(event->source_id);
         const auto child = nodes.at(event->target_id);
 
-        auto edge = std::make_shared<Edge>(parent, child);
-        edges.push_back(edge);
+        const xpti::payload_t *payload = xptiQueryPayload(event);
+        std::string name;
+        if (payload->name_sid != xpti::invalid_id) {
+          name = payload->name;
+        } else {
+          throw std::runtime_error("Invalid event name!");
+        }
+        auto edge = std::make_shared<Edge>(parent, child, name);
+        edges.insert(edge);
 
         parent->inEdges.push_back(edge);
         parent->outEdges.push_back(edge);

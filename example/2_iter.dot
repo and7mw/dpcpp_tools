@@ -1,0 +1,75 @@
+digraph graphname {
+N67 [label="Mem op type: Memory Deallocation
+Mem ptr: [0x18145f0]
+Avg time: 12.000000 ms, launched 1 time"];
+
+N101 [label="Kernel: _ZTSZZ4mainENKUlRN2cl4sycl7handlerEE50_26clES2_E3Add
+Device: GPU
+Avg time: 31.000000 ms, launched 2 time"];
+
+N66 [label="Kernel: _ZTSZZ4mainENKUlRN2cl4sycl7handlerEE38_26clES2_E3Sub
+Device: GPU
+Avg time: 42461.000000 ms, launched 2 time"];
+
+N130 [label="Mem op type: Memory Allocation
+Mem ptr: [0x1814790]
+Avg time: 21.000000 ms, launched 1 time"];
+N129 [label="Mem op type: Memory Deallocation
+Mem ptr: [0x1814790]
+Avg time: 6.000000 ms, launched 1 time"];
+N127 [label="Kernel: _ZTSZZ4mainENKUlRN2cl4sycl7handlerEE61_26clES2_E3Mul
+Device: GPU
+Avg time: 29.500000 ms, launched 2 time"];
+N208 [label="Mem op type: Memory Transfer (Copy)
+Mem ptr: [0x1814790]
+Device: HOST
+from: GPU to: HOST
+Avg time: 95.000000 ms, launched 1 time"];
+N106 [label="Mem op type: Memory Deallocation
+Mem ptr: [0x1814950]
+Avg time: 12.000000 ms, launched 1 time"];
+N103 [label="Mem op type: Memory Allocation
+Mem ptr: [0x193fb00]
+Avg time: 229.000000 ms, launched 1 time"];
+N74 [label="Mem op type: Memory Allocation
+Mem ptr: [0x1814860]
+Avg time: 6.000000 ms, launched 1 time"];
+N107 [label="Mem op type: Memory Allocation
+Mem ptr: [0x1814950]
+Avg time: 5.000000 ms, launched 1 time"];
+N73 [label="Mem op type: Memory Deallocation
+Mem ptr: [0x1814860]
+Avg time: 7.000000 ms, launched 1 time"];
+N102 [label="Mem op type: Memory Deallocation
+Mem ptr: [0x193fb00]
+Avg time: 10.000000 ms, launched 1 time"];
+N68 [label="Mem op type: Memory Allocation
+Mem ptr: [0x18145f0]
+Avg time: 275.000000 ms, launched 1 time"];
+N70 [label="Mem op type: Memory Deallocation
+Mem ptr: [0x18146c0]
+Avg time: 3.000000 ms, launched 1 time"];
+N71 [label="Mem op type: Memory Allocation
+Mem ptr: [0x18146c0]
+Avg time: 8.000000 ms, launched 1 time"];
+N103 -> N102 [label="Edge:Memory Deallocation"];
+N71 -> N70 [label="Edge:Memory Deallocation"];
+N208 -> N129 [label="Edge:Memory Deallocation"];
+N107 -> N101 [label="write"];
+N68 -> N66 [label="read"];
+N127 -> N208 [label="read"];
+N68 -> N67 [label="Edge:Memory Deallocation"];
+N66 -> N127 [label="read"];
+N101 -> N101 [label="write"];
+N74 -> N66 [label="write"];
+N127 -> N66 [label="write"];
+N103 -> N101 [label="read"];
+N127 -> N127 [label="write"];
+N71 -> N66 [label="read"];
+N101 -> N127 [label="read"];
+N66 -> N101 [label="read"];
+N130 -> N127 [label="write"];
+N66 -> N66 [label="write"];
+N101 -> N66 [label="write"];
+N127 -> N101 [label="write"];
+}
