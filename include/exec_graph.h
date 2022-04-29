@@ -11,14 +11,6 @@
 #include <functional>
 #include "xpti_trace_framework.h"
 
-// #define DEBUG
-
-#ifdef DEBUG
-#define DBG_PRINT(x) x
-#else
-#define DBG_PRINT(x)
-#endif
-
 struct PerfEntry {
     std::chrono::high_resolution_clock::time_point start, end;
 };
@@ -161,6 +153,8 @@ public:
 public:
     std::weak_ptr<Node> parent, child;
     std::string name;
+
+    size_t num = 0;
 };
 
 class ExecGraph {
@@ -183,23 +177,24 @@ public:
         }
     };
 
-    std::unordered_set<std::shared_ptr<Edge>, hash, edgeCompare> edges;
+    // std::unordered_set<std::shared_ptr<Edge>, hash, edgeCompare> edges;
+    std::vector<std::shared_ptr<Edge>> edges;
 
 public:
     void modifyExecGraph(uint16_t eventType, xpti::trace_event_data_t *event) {
         xpti::metadata_t *metadata = xptiQueryMetadata(event);
         switch (eventType) {
             case static_cast<uint16_t>(xpti::trace_point_type_t::node_create): {
-                DBG_PRINT(std::cout << "node created with id: " << event->unique_id << std::endl;)
+                // std::cout << "node created with id: " << event->unique_id << std::endl;
 
                 addNode(event, metadata);
                 break;
             }
             case static_cast<uint16_t>(xpti::trace_point_type_t::edge_create): {
-                DBG_PRINT(std::cout << "edge created"
-                                    << " parent: " << event->source_id
-                                    << " child: " << event->target_id
-                                    << std::endl;)
+                std::cout << "edge created"
+                          << " parent: " << event->source_id
+                          << " child: " << event->target_id
+                          << std::endl;
 
                 addEdge(event);
                 break;
@@ -231,7 +226,7 @@ public:
 
         for (const auto& edge : edges) {
             dump << "N" << edge->parent.lock()->id << " -> N" << edge->child.lock()->id
-            << " [label=\"" << edge->name << "\"];" << std::endl;
+            << " [label=\"" << edge->name << "_" << std::to_string(edge->num) << "\"];" << std::endl;
         }
 
         dump << "}" << std::endl;
@@ -276,6 +271,7 @@ private:
     }
 
     void addEdge(xpti::trace_event_data_t *event) {
+        static size_t count = 0;
         const auto parent = nodes.at(event->source_id);
         const auto child = nodes.at(event->target_id);
 
@@ -287,9 +283,13 @@ private:
           throw std::runtime_error("Invalid event name!");
         }
         auto edge = std::make_shared<Edge>(parent, child, name);
-        edges.insert(edge);
+        edge->num = count;
+        // edges.insert(edge);
+        edges.push_back(edge);
 
         parent->inEdges.push_back(edge);
         parent->outEdges.push_back(edge);
+
+        count++;
     }
 };
