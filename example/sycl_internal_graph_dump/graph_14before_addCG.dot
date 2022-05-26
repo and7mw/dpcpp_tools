@@ -1,0 +1,29 @@
+strict digraph {
+"0x3ed6ac0" [style=filled, fillcolor="#AFFF82", label="ID = 0x3ed6ac0\nEXEC CG ON GPU\nKernel name: _ZTSZZ19JacobiSolveAccessorRK10EquatationmfRKN2cl4sycl15device_selectorEENKUlRNS3_7handlerEE169_34clES8_E10JacobiIter\n"];
+  "0x3ed6ac0" -> "0xb89ab0" [ label = "Access mode: read\nMemObj: 0x12497b0 " ]
+  "0x3ed6ac0" -> "0xb8acc0" [ label = "Access mode: read\nMemObj: 0x1249590 " ]
+  "0x3ed6ac0" -> "0x3ed7090" [ label = "Access mode: read\nMemObj: 0x1249480 " ]
+  "0x3ed6ac0" -> "0x3ecf250" [ label = "Access mode: write\nMemObj: 0x1249ae0 " ]
+  "0x3ed6ac0" -> "0x3ed7090" [ label = "Access mode: write\nMemObj: 0x1249ae0 " ]
+  "0x3ed6ac0" -> "0xb8ec40" [ label = "Access mode: write\nMemObj: 0x12496a0 " ]
+"0x3ed7090" [style=filled, fillcolor="#AFFF82", label="ID = 0x3ed7090\nEXEC CG ON GPU\nKernel name: _ZTSZZ19JacobiSolveAccessorRK10EquatationmfRKN2cl4sycl15device_selectorEENKUlRNS3_7handlerEE204_34clES8_E4Copy\n"];
+  "0x3ed7090" -> "0x3ecf250" [ label = "Access mode: read\nMemObj: 0x1249ae0 " ]
+  "0x3ed7090" -> "0x3ecf250" [ label = "Access mode: write\nMemObj: 0x1249480 " ]
+  "0x3ed7090" -> "0xb8bee0" [ label = "Access mode: write\nMemObj: 0x1249480 " ]
+"0x3ecf250" [style=filled, fillcolor="#AFFF82", label="ID = 0x3ecf250\nEXEC CG ON GPU\nKernel name: _ZTSZZ19JacobiSolveAccessorRK10EquatationmfRKN2cl4sycl15device_selectorEENKUlRNS3_7handlerEE169_34clES8_E10JacobiIter\n"];
+  "0x3ecf250" -> "0xb89ab0" [ label = "Access mode: read\nMemObj: 0x12497b0 " ]
+  "0x3ecf250" -> "0xb8acc0" [ label = "Access mode: read\nMemObj: 0x1249590 " ]
+  "0x3ecf250" -> "0xb8bee0" [ label = "Access mode: read\nMemObj: 0x1249480 " ]
+  "0x3ecf250" -> "0xba7dd0" [ label = "Access mode: write\nMemObj: 0x1249ae0 " ]
+  "0x3ecf250" -> "0xb8d5a0" [ label = "Access mode: write\nMemObj: 0x1249ae0 " ]
+"0xba7dd0" [style=filled, fillcolor="#AFFF82", label="ID = 0xba7dd0\nEXEC CG ON GPU\nKernel name: _ZTSZZ19JacobiSolveAccessorRK10EquatationmfRKN2cl4sycl15device_selectorEENKUlRNS3_7handlerEE169_34clES8_E10JacobiIter\n"];
+  "0xba7dd0" -> "0xb89ab0" [ label = "Access mode: read\nMemObj: 0x12497b0 " ]
+  "0xba7dd0" -> "0xb8acc0" [ label = "Access mode: read\nMemObj: 0x1249590 " ]
+  "0xba7dd0" -> "0xb8bee0" [ label = "Access mode: read\nMemObj: 0x1249480 " ]
+  "0xba7dd0" -> "0xb8d5a0" [ label = "Access mode: write\nMemObj: 0x1249ae0 " ]
+"0xb89ab0" [style=filled, fillcolor="#FFD28A", label="ID = 0xb89ab0\nALLOCA ON GPU\n MemObj : 0x12497b0\n Link : 0\n"];
+"0xb8acc0" [style=filled, fillcolor="#FFD28A", label="ID = 0xb8acc0\nALLOCA ON GPU\n MemObj : 0x1249590\n Link : 0\n"];
+"0xb8bee0" [style=filled, fillcolor="#FFD28A", label="ID = 0xb8bee0\nALLOCA ON GPU\n MemObj : 0x1249480\n Link : 0\n"];
+"0xb8d5a0" [style=filled, fillcolor="#FFD28A", label="ID = 0xb8d5a0\nALLOCA ON GPU\n MemObj : 0x1249ae0\n Link : 0\n"];
+"0xb8ec40" [style=filled, fillcolor="#FFD28A", label="ID = 0xb8ec40\nALLOCA ON GPU\n MemObj : 0x12496a0\n Link : 0\n"];
+}

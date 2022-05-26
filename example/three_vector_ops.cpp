@@ -18,13 +18,15 @@ int main(int argc, char* argv[]) {
 
         std::vector<int> A(size, A_val), B(size, B_val), C(size, C_val), result(size);
 
+        // std::vector<int> add(size), sub(size);
+
         // sub_res = (B - C)
         // add_res = A + sub_res
         // res = sub_res + add_res
         const int expected = 2 * (B_val - C_val) + A_val;
 
         const size_t iter_num = 2;
-        
+        // for (size_t i = 0; i < iter_num; i++) {
             sycl::buffer<int, 1> A_buffer(A.data(), A.size());
             sycl::buffer<int, 1> B_buffer(B.data(), B.size());
             sycl::buffer<int, 1> C_buffer(C.data(), C.size());
@@ -32,10 +34,11 @@ int main(int argc, char* argv[]) {
 
             sycl::buffer<int, 1> sub_res(size);
             sycl::buffer<int, 1> add_res(size);
+            // sycl::buffer<int, 1> sub_res(sub.data(), sub.size());
+            // sycl::buffer<int, 1> add_res(add.data(), add.size());
 
         for (size_t i = 0; i < iter_num; i++) {
             // Sub
-            std::cout << "================================ Sub ================================" << std::endl;
             queue.submit([&](sycl::handler &cgh) {
                 auto B_acc = B_buffer.get_access<sycl::access::mode::read>(cgh);
                 auto C_acc = C_buffer.get_access<sycl::access::mode::read>(cgh);
@@ -48,7 +51,6 @@ int main(int argc, char* argv[]) {
 
             });
             // Add
-            std::cout << "================================ Add ================================" << std::endl;
             queue.submit([&](sycl::handler &cgh) {
                 auto A_acc = A_buffer.get_access<sycl::access::mode::read>(cgh);
                 auto sub_res_acc = sub_res.get_access<sycl::access::mode::read>(cgh);
@@ -60,7 +62,6 @@ int main(int argc, char* argv[]) {
                 });
             });
             // Mult
-            std::cout << "================================ Mult ================================" << std::endl;
             queue.submit([&](sycl::handler &cgh) {
                 auto sub_res_acc = sub_res.get_access<sycl::access::mode::read>(cgh);
                 auto add_res_acc = add_res.get_access<sycl::access::mode::read>(cgh);

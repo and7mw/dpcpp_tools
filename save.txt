@@ -1,0 +1,189 @@
+Registered all callbacks
+Registered all callbacks
+Target device: Intel(R) Gen9 HD Graphics NEO
+************************ 0 iteration start ************************
+------------------------- 1 submit -------------------------
+==================================================================
+----------------- node_create ------------- event_id=        66 --- p_ev_id=         1 | name=_ZTSZZ4mainENKUlRN2cl4sycl7handlerEE34_26clES2_E3Sub
+   sym_line_no              :34
+   sym_source_file_name     :test.cpp
+   sym_function_name        :_ZTSZZ4mainENKUlRN2cl4sycl7handlerEE34_26clES2_E3Sub
+   from_source              :false
+   sycl_device              :GPU
+   kernel_name              :_ZTSZZ4mainENKUlRN2cl4sycl7handlerEE34_26clES2_E3Sub
+---[Source file:line no] test.cpp:34
+==================================================================
+----------------- node_create ------------- event_id=        67 --- p_ev_id=         1 | name=Memory Deallocation[0xd7d070]      
+   allocation_type          :Memory Allocation
+   sycl_device              :GPU
+==================================================================
+----------------- node_create ------------- event_id=        68 --- p_ev_id=         1 | name=Memory Allocation[0xd7d070]        
+   memory_object            :0xd7d070
+   sycl_device              :GPU
+==================================================================
+----------------- edge_create ------------- event_id=        69 --- s=        68 --- t=        66 | name=read_write[0xd7d070]               
+   memory_object            :0xd7d070
+   access_mode              :read_write[0xd7d070]
+==================================================================
+----------------- node_create ------------- event_id=        70 --- p_ev_id=         1 | name=Memory Deallocation[0xd7d140]      
+   allocation_type          :Memory Allocation
+   sycl_device              :GPU
+==================================================================
+----------------- node_create ------------- event_id=        71 --- p_ev_id=         1 | name=Memory Allocation[0xd7d140]        
+   memory_object            :0xd7d140
+   sycl_device              :GPU
+==================================================================
+----------------- edge_create ------------- event_id=        72 --- s=        71 --- t=        66 | name=read_write[0xd7d140]               
+   memory_object            :0xd7d140
+   access_mode              :read_write[0xd7d140]
+==================================================================
+----------------- node_create ------------- event_id=        73 --- p_ev_id=         1 | name=Memory Deallocation[0xd7d2e0]      
+   allocation_type          :Memory Allocation
+   sycl_device              :GPU
+==================================================================
+----------------- node_create ------------- event_id=        74 --- p_ev_id=         1 | name=Memory Allocation[0xd7d2e0]        
+   memory_object            :0xd7d2e0
+   sycl_device              :GPU
+==================================================================
+----------------- edge_create ------------- event_id=        75 --- s=        74 --- t=        66 | name=read_write[0xd7d2e0]               
+   memory_object            :0xd7d2e0
+   access_mode              :read_write[0xd7d2e0]
+==================================================================
+----------------- task_begin ------------- event_id=        68 --- p_ev_id=         1 | name=Memory Allocation[0xd7d070]        
+   memory_object            :0xd7d070
+   sycl_device              :GPU
+==================================================================
+----------------- task_end ------------- event_id=        68 --- p_ev_id=         1 | name=Memory Allocation[0xd7d070]        
+   memory_object            :0xd7d070
+   sycl_device              :GPU
+==================================================================
+----------------- task_begin ------------- event_id=        71 --- p_ev_id=         1 | name=Memory Allocation[0xd7d140]        
+   memory_object            :0xd7d140
+   sycl_device              :GPU
+==================================================================
+----------------- task_end ------------- event_id=        71 --- p_ev_id=         1 | name=Memory Allocation[0xd7d140]        
+   memory_object            :0xd7d140
+   sycl_device              :GPU
+==================================================================
+----------------- task_begin ------------- event_id=        74 --- p_ev_id=         1 | name=Memory Allocation[0xd7d2e0]        
+   memory_object            :0xd7d2e0
+   sycl_device              :GPU
+==================================================================
+----------------- task_end ------------- event_id=        74 --- p_ev_id=         1 | name=Memory Allocation[0xd7d2e0]        
+   memory_object            :0xd7d2e0
+   sycl_device              :GPU
+==================================================================
+----------------- task_begin ------------- event_id=        66 --- p_ev_id=         1 | name=_ZTSZZ4mainENKUlRN2cl4sycl7handlerEE34_26clES2_E3Sub
+   sym_line_no              :34
+   sym_source_file_name     :test.cpp
+   sym_function_name        :_ZTSZZ4mainENKUlRN2cl4sycl7handlerEE34_26clES2_E3Sub
+   from_source              :false
+   sycl_device              :GPU
+   kernel_name              :_ZTSZZ4mainENKUlRN2cl4sycl7handlerEE34_26clES2_E3Sub
+---[Source file:line no] test.cpp:34
+==================================================================
+----------------- signal ------------- event_id=        66 --- s=         0 --- t=         0 | name=_ZTSZZ4mainENKUlRN2cl4sycl7handlerEE34_26clES2_E3Sub
+   sym_line_no              :34
+   sym_source_file_name     :test.cpp
+   sym_function_name        :_ZTSZZ4mainENKUlRN2cl4sycl7handlerEE34_26clES2_E3Sub
+   from_source              :false
+   sycl_device              :GPU
+   kernel_name              :_ZTSZZ4mainENKUlRN2cl4sycl7handlerEE34_26clES2_E3Sub
+---[Source file:line no] test.cpp:34
+==================================================================
+----------------- task_end ------------- event_id=        66 --- p_ev_id=         1 | name=_ZTSZZ4mainENKUlRN2cl4sycl7handlerEE34_26clES2_E3Sub
+   sym_line_no              :34
+   sym_source_file_name     :test.cpp
+   sym_function_name        :_ZTSZZ4mainENKUlRN2cl4sycl7handlerEE34_26clES2_E3Sub
+   from_source              :false
+   sycl_device              :GPU
+   kernel_name              :_ZTSZZ4mainENKUlRN2cl4sycl7handlerEE34_26clES2_E3Sub
+---[Source file:line no] test.cpp:34
+************************ 0 iteration end ************************
+==================================================================
+----------------- task_begin ------------- event_id=        73 --- p_ev_id=         1 | name=Memory Deallocation[0xd7d2e0]      
+   allocation_type          :Memory Allocation
+   sycl_device              :GPU
+==================================================================
+----------------- task_end ------------- event_id=        73 --- p_ev_id=         1 | name=Memory Deallocation[0xd7d2e0]      
+   allocation_type          :Memory Allocation
+   sycl_device              :GPU
+==================================================================
+----------------- node_create ------------- event_id=       105 --- p_ev_id=         1 | name=Memory Transfer (Copy)[0xd7d140]   
+   copy_to                  :HOST
+   copy_from                :GPU
+   sycl_device              :HOST
+   memory_object            :0xd7d140
+==================================================================
+----------------- edge_create ------------- event_id=       106 --- s=        66 --- t=       105 | name=read[0xd7d140]                     
+   memory_object            :0xd7d140
+   access_mode              :read[0xd7d140]
+==================================================================
+----------------- task_begin ------------- event_id=       105 --- p_ev_id=         1 | name=Memory Transfer (Copy)[0xd7d140]   
+   copy_to                  :HOST
+   copy_from                :GPU
+   sycl_device              :HOST
+   memory_object            :0xd7d140
+==================================================================
+----------------- signal ------------- event_id=       105 --- s=         0 --- t=         0 | name=Memory Transfer (Copy)[0xd7d140]   
+   copy_to                  :HOST
+   copy_from                :GPU
+   sycl_device              :HOST
+   memory_object            :0xd7d140
+==================================================================
+----------------- task_end ------------- event_id=       105 --- p_ev_id=         1 | name=Memory Transfer (Copy)[0xd7d140]   
+   copy_to                  :HOST
+   copy_from                :GPU
+   sycl_device              :HOST
+   memory_object            :0xd7d140
+==================================================================
+----------------- task_begin ------------- event_id=        70 --- p_ev_id=         1 | name=Memory Deallocation[0xd7d140]      
+   allocation_type          :Memory Allocation
+   sycl_device              :GPU
+==================================================================
+----------------- task_end ------------- event_id=        70 --- p_ev_id=         1 | name=Memory Deallocation[0xd7d140]      
+   allocation_type          :Memory Allocation
+   sycl_device              :GPU
+==================================================================
+----------------- edge_create ------------- event_id=       112 --- s=       105 --- t=        70 | name=Memory Deallocation[0xd7d140]      
+   memory_object            :0xd7d140
+==================================================================
+----------------- node_create ------------- event_id=       114 --- p_ev_id=         1 | name=Memory Transfer (Copy)[0xd7d070]   
+   copy_to                  :HOST
+   copy_from                :GPU
+   sycl_device              :HOST
+   memory_object            :0xd7d070
+==================================================================
+----------------- edge_create ------------- event_id=       115 --- s=        66 --- t=       114 | name=read[0xd7d070]                     
+   memory_object            :0xd7d070
+   access_mode              :read[0xd7d070]
+==================================================================
+----------------- task_begin ------------- event_id=       114 --- p_ev_id=         1 | name=Memory Transfer (Copy)[0xd7d070]   
+   copy_to                  :HOST
+   copy_from                :GPU
+   sycl_device              :HOST
+   memory_object            :0xd7d070
+==================================================================
+----------------- signal ------------- event_id=       114 --- s=         0 --- t=         0 | name=Memory Transfer (Copy)[0xd7d070]   
+   copy_to                  :HOST
+   copy_from                :GPU
+   sycl_device              :HOST
+   memory_object            :0xd7d070
+==================================================================
+----------------- task_end ------------- event_id=       114 --- p_ev_id=         1 | name=Memory Transfer (Copy)[0xd7d070]   
+   copy_to                  :HOST
+   copy_from                :GPU
+   sycl_device              :HOST
+   memory_object            :0xd7d070
+==================================================================
+----------------- task_begin ------------- event_id=        67 --- p_ev_id=         1 | name=Memory Deallocation[0xd7d070]      
+   allocation_type          :
+   sycl_device              :GPU
+==================================================================
+----------------- task_end ------------- event_id=        67 --- p_ev_id=         1 | name=Memory Deallocation[0xd7d070]      
+   allocation_type          :Memory Allocation
+   sycl_device              :GPU
+==================================================================
+----------------- edge_create ------------- event_id=       121 --- s=       114 --- t=        67 | name=Memory Deallocation[0xd7d070]      
+   memory_object            :0xd7d070
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 

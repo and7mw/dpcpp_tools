@@ -10,6 +10,8 @@
 #include <iostream>
 #include <functional>
 #include "xpti_trace_framework.h"
+#include "demangle.h"
+#include <iomanip>
 
 struct PerfEntry {
     std::chrono::high_resolution_clock::time_point start, end;
@@ -32,21 +34,29 @@ public:
 
 protected:
     std::string getPertCounters() const {
+        
+
+        std::string res = "Avg time: " + std::to_string(getAvgTime()) +
+                          " ms, launched " + std::to_string(perfEntries.size()) + " times";
+        return res;
+    }
+public:
+    float getAvgTime() const {
         uint64_t total = 0;
 
         for (size_t i = 0; i < perfEntries.size(); i++) {
             total += std::chrono::duration_cast<std::chrono::microseconds>(perfEntries[i].end - perfEntries[i].start).count();
         }
 
-        std::string res = "Avg time: " + std::to_string(static_cast<float>(total) / perfEntries.size()) +
-                          " ms, launched " + std::to_string(perfEntries.size()) + " time";
-        return res;
+        return (static_cast<float>(total) / perfEntries.size());
     }
 };
 
 class KernelNode : public Node {
 public:
-    KernelNode(const std::string &name, xpti::metadata_t *metadata, int64_t id) : name(name) {
+    KernelNode(const std::string &name, xpti::metadata_t *metadata, int64_t id) {
+        // this->name = Demangle(name.c_str());
+        this->name = name;
         this->id = id;
         for (auto &it : *metadata) {
             if (xptiLookupString(it.first) == std::string("sycl_device")) {
@@ -177,15 +187,15 @@ public:
         }
     };
 
-    // std::unordered_set<std::shared_ptr<Edge>, hash, edgeCompare> edges;
-    std::vector<std::shared_ptr<Edge>> edges;
+    std::unordered_set<std::shared_ptr<Edge>, hash, edgeCompare> edges;
+    // std::vector<std::shared_ptr<Edge>> edges;
 
 public:
     void modifyExecGraph(uint16_t eventType, xpti::trace_event_data_t *event) {
         xpti::metadata_t *metadata = xptiQueryMetadata(event);
         switch (eventType) {
             case static_cast<uint16_t>(xpti::trace_point_type_t::node_create): {
-                // std::cout << "node created with id: " << event->unique_id << std::endl;
+                std::cout << "NODE created with id: " << event->unique_id << std::endl;
 
                 addNode(event, metadata);
                 break;
@@ -215,18 +225,47 @@ public:
     }
 
     ~ExecGraph() {
+        const std::vector<std::pair<float, std::string>> painter{
+            {75.0f, "red"},
+            {50.0f, "orange"},
+            {25.0f, "yellow"},
+            {10.0f, "green"},
+        };
+
         // printf("ExecGraph DTOR: %lu %lu\n", this->nodes.size(), this->edges.size());
         std::ofstream dump;
         dump.open("/home/maxim/master_science_work/dpcpp_tools/dump.dot");
 
+        float total = 0.0f;
+        for (const auto& node : nodes) {
+            total += node.second->getAvgTime();
+        }
+
         dump << "digraph graphname {" << std::endl;
         for (const auto& node : nodes) {
-            dump << "N" << node.first << " [label=\"" << node.second->serialize() << "\"];" << std::endl;
+            dump << "N" << node.first;
+            dump << " [label=\"" << node.second->serialize();
+            const float percent = node.second->getAvgTime() / total * 100.0f;
+            dump << std::fixed << std::setprecision(2) << ", " << percent << " %";
+            dump << "\"";
+            if (std::dynamic_pointer_cast<MemoryNode>(node.second)) {
+                dump << ", shape=box";
+            }
+
+            for (const auto& p : painter) {
+                if (percent >= p.first) {
+                    dump << ", style=filled, fillcolor=" << p.second;
+                    break;
+                }
+            }
+
+            dump << "];" << std::endl;
         }
 
         for (const auto& edge : edges) {
             dump << "N" << edge->parent.lock()->id << " -> N" << edge->child.lock()->id
-            << " [label=\"" << edge->name << "_" << std::to_string(edge->num) << "\"];" << std::endl;
+            // << " [label=\"" << edge->name << "_" << std::to_string(edge->num) << "\"];" << std::endl;
+            << " [label=\"" << edge->name << "\"];" << std::endl;
         }
 
         dump << "}" << std::endl;
@@ -284,8 +323,8 @@ private:
         }
         auto edge = std::make_shared<Edge>(parent, child, name);
         edge->num = count;
-        // edges.insert(edge);
-        edges.push_back(edge);
+        edges.insert(edge);
+        // edges.push_back(edge);
 
         parent->inEdges.push_back(edge);
         parent->outEdges.push_back(edge);
