@@ -154,7 +154,15 @@ std::vector<float> JacobiSolveAccessor(const Equatation &eq, const size_t numIte
         std::cout << "Target device: "
                   << queue.get_info<sycl::info::queue::device>().get_info<sycl::info::device::name>() << std::endl;
 
-        {
+        sycl::program program_jacobi(queue.get_context());
+        program_jacobi.build_with_kernel_type<class JacobiIter>();
+        sycl::kernel kernelJacobiIter = program_jacobi.get_kernel<class JacobiIter>();
+
+        sycl::program program_copy(queue.get_context());
+        program_copy.build_with_kernel_type<class Copy>();
+        sycl::kernel kernelCopy = program_copy.get_kernel<class Copy>();
+
+        // {
             float error = std::numeric_limits<float>::max();
             // while (error > accuracy && iter < numIter) {
             sycl::buffer<float, 1> A_matrix(transposeA.data(), transposeA.size());
@@ -166,14 +174,16 @@ std::vector<float> JacobiSolveAccessor(const Equatation &eq, const size_t numIte
                 {
                 sycl::buffer<float, 1> err_vector(errorVector.data(), errorVector.size());
 
+                    std::cout << "=========== JacobiIter START" << std::endl;
                     queue.submit([&](sycl::handler &cgh) {
                         auto A_acc = A_matrix.get_access<sycl::access::mode::read>(cgh);
                         auto B_acc = B_vector.get_access<sycl::access::mode::read>(cgh);
                         auto X_prev_acc = X_vector_prev.get_access<sycl::access::mode::read>(cgh);
                         auto X_acc = X_vector.get_access<sycl::access::mode::write>(cgh);
                         auto error_acc = err_vector.get_access<sycl::access::mode::write>(cgh);
-// error_acc.get_offset
-                        cgh.parallel_for<class JacobiIter>(sycl::nd_range<1>(sycl::range<1>(NUM_WORK_ITEM),
+
+                        cgh.parallel_for<class JacobiIter>(kernelJacobiIter,
+                                                                             sycl::nd_range<1>(sycl::range<1>(NUM_WORK_ITEM),
                                                                              sycl::range<1>(NUM_WORK_ITEM_PER_GROUP)),
                                 [=](sycl::nd_item<1> item) {
                             const auto idx = item.get_global_id(0);
@@ -200,24 +210,27 @@ std::vector<float> JacobiSolveAccessor(const Equatation &eq, const size_t numIte
 
                     });
                     queue.wait_and_throw();
+                    std::cout << "=========== JacobiIter END" << std::endl;
 
+                    std::cout << "=========== Copy START" << std::endl;
                     queue.submit([&](sycl::handler &cgh) {
                         auto X_acc = X_vector.get_access<sycl::access::mode::read>(cgh);
                         auto X_prev_acc = X_vector_prev.get_access<sycl::access::mode::write>(cgh);
 
-                        cgh.parallel_for<class Copy>(sycl::range<1>(N), [=](sycl::nd_item<1> item) {
+                        cgh.parallel_for<class Copy>(kernelCopy, sycl::range<1>(N), [=](sycl::nd_item<1> item) {
                             const auto idx = item.get_global_id(0);
                             X_prev_acc[idx] = X_acc[idx];
                         });
 
                     });
                     queue.wait_and_throw();
+                    std::cout << "=========== Copy END" << std::endl;
                 }
 
                 iter++;
                 error = *std::max_element(errorVector.begin(), errorVector.end());
             }
-        }
+        // }
     } catch(sycl::exception ex) {
         std::string message = std::string("SYCL error: ") + ex.what();
         std::cout << message << std::endl;

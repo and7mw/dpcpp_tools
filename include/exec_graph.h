@@ -41,15 +41,21 @@ protected:
         return res;
     }
 public:
-    float getAvgTime() const {
+    uint64_t getTotalTime() const {
         uint64_t total = 0;
 
         for (size_t i = 0; i < perfEntries.size(); i++) {
             total += std::chrono::duration_cast<std::chrono::microseconds>(perfEntries[i].end - perfEntries[i].start).count();
         }
 
-        return (static_cast<float>(total) / perfEntries.size());
+        return total;
     }
+
+    float getAvgTime() const {
+        return (static_cast<float>(getTotalTime()) / perfEntries.size());
+    }
+
+    std::string name;
 };
 
 class KernelNode : public Node {
@@ -76,7 +82,8 @@ public:
     }
 
 private:
-    std::string name, device;
+    // std::string name, device;
+    std::string device;
 };
 
 class MemoryNode : public Node {
@@ -195,7 +202,7 @@ public:
         xpti::metadata_t *metadata = xptiQueryMetadata(event);
         switch (eventType) {
             case static_cast<uint16_t>(xpti::trace_point_type_t::node_create): {
-                std::cout << "NODE created with id: " << event->unique_id << std::endl;
+                // std::cout << "NODE created with id: " << event->unique_id << std::endl;
 
                 addNode(event, metadata);
                 break;
@@ -212,10 +219,16 @@ public:
             case static_cast<uint16_t>(xpti::trace_point_type_t::task_begin): {
                 nodes[event->unique_id]->perfEntries.push_back(PerfEntry());
                 nodes[event->unique_id]->perfEntries.back().start = std::chrono::high_resolution_clock::now();
+                std::cout << event->unique_id << " START: " << nodes.at(event->unique_id)->name << std::endl;
                 break;
             }
             case static_cast<uint16_t>(xpti::trace_point_type_t::task_end): {
                 nodes[event->unique_id]->perfEntries.back().end = std::chrono::high_resolution_clock::now();
+                std::cout << event->unique_id << " END: " << nodes.at(event->unique_id)->name
+                        // << " " << std::chrono::duration_cast<std::chrono::microseconds>(nodes[event->unique_id]->perfEntries.back().end - nodes[event->unique_id]->perfEntries.back().start).count()
+                        // << " " << std::chrono::duration_cast<std::chrono::microseconds>(nodes[event->unique_id]->perfEntries.back().start).count()
+                        // << " " << std::chrono::duration_cast<std::chrono::microseconds>(nodes[event->unique_id]->perfEntries.back().end).count()
+                        << std::endl;
                 break;
             }
             default: {
@@ -229,23 +242,23 @@ public:
             {75.0f, "red"},
             {50.0f, "orange"},
             {25.0f, "yellow"},
-            {10.0f, "green"},
+            {0.0f, "green"},
         };
 
         // printf("ExecGraph DTOR: %lu %lu\n", this->nodes.size(), this->edges.size());
         std::ofstream dump;
         dump.open("/home/maxim/master_science_work/dpcpp_tools/dump.dot");
 
-        float total = 0.0f;
+        uint64_t total = 0.0f;
         for (const auto& node : nodes) {
-            total += node.second->getAvgTime();
+            total += node.second->getTotalTime();
         }
 
         dump << "digraph graphname {" << std::endl;
         for (const auto& node : nodes) {
             dump << "N" << node.first;
             dump << " [label=\"" << node.second->serialize();
-            const float percent = node.second->getAvgTime() / total * 100.0f;
+            const float percent = static_cast<float>(node.second->getTotalTime()) / total * 100.0f;
             dump << std::fixed << std::setprecision(2) << ", " << percent << " %";
             dump << "\"";
             if (std::dynamic_pointer_cast<MemoryNode>(node.second)) {

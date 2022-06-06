@@ -1,73 +1,74 @@
 digraph graphname {
-N327 [label="Mem op type: Memory Transfer (Copy)
-Mem ptr: [0x1249ae0]
+N158 [label="Mem op type: Memory Transfer (Copy)
+Mem ptr: [0x359a0f0]
 Device: HOST
 from: GPU 
-Avg time: 219.000000 ms, launched 1 times, 0.24 %", shape=box];
-N150 [label="Mem op type: Memory Transfer (Copy)
-Mem ptr: [0x12496a0]
-Device: HOST
-from: GPU 
-Avg time: 103.599998 ms, launched 5 times, 0.11 %", shape=box];
-N97 [label="Mem op type: Memory Allocation
-Mem ptr: [0x12496a0]
-Avg time: 17.200001 ms, launched 5 times, 0.02 %", shape=box];
-N96 [label="Mem op type: Memory Deallocation
-Mem ptr: [0x12496a0]
-Avg time: 34.400002 ms, launched 5 times, 0.04 %", shape=box];
-N94 [label="Mem op type: Memory Allocation
-Mem ptr: [0x1249ae0]
-Avg time: 7.000000 ms, launched 1 times, 0.01 %", shape=box];
-N93 [label="Mem op type: Memory Deallocation
-Mem ptr: [0x1249ae0]
-Avg time: 33.000000 ms, launched 1 times, 0.04 %", shape=box];
-N91 [label="Mem op type: Memory Allocation
-Mem ptr: [0x1249480]
-Avg time: 18.000000 ms, launched 1 times, 0.02 %", shape=box];
-N84 [label="Mem op type: Memory Deallocation
-Mem ptr: [0x12497b0]
-Avg time: 7466.000000 ms, launched 1 times, 8.21 %", shape=box];
-N338 [label="Mem op type: Memory Transfer (Copy)
-Mem ptr: [0x1249480]
-Device: HOST
-from: GPU 
-Avg time: 90.000000 ms, launched 1 times, 0.10 %", shape=box];
-N134 [label="Kernel: _ZTSZZ19JacobiSolveAccessorRK10EquatationmfRKN2cl4sycl15device_selectorEENKUlRNS3_7handlerEE204_34clES8_E4Copy
+Avg time: 85.709999 ms, launched 100 times, 7.09 %", shape=box, style=filled, fillcolor=green];
+N112 [label="Mem op type: Memory Allocation
+Mem ptr: [0x359a0f0]
+Avg time: 14.980000 ms, launched 100 times, 1.24 %", shape=box, style=filled, fillcolor=green];
+N145 [label="Kernel: typeinfo name for JacobiSolveAccessor(Equatation const&, unsigned long, float, cl::sycl::device_selector const&)::Copy
 Device: GPU
-Avg time: 145.000000 ms, launched 5 times, 0.16 %"];
-N83 [label="Kernel: _ZTSZZ19JacobiSolveAccessorRK10EquatationmfRKN2cl4sycl15device_selectorEENKUlRNS3_7handlerEE169_34clES8_E10JacobiIter
+Avg time: 111.540001 ms, launched 100 times, 9.23 %", style=filled, fillcolor=green];
+N111 [label="Mem op type: Memory Deallocation
+Mem ptr: [0x359a0f0]
+Avg time: 19.950001 ms, launched 100 times, 1.65 %", shape=box, style=filled, fillcolor=green];
+N109 [label="Mem op type: Memory Allocation
+Mem ptr: [0x35d8cb0]
+Avg time: 18.000000 ms, launched 1 times, 0.01 %", shape=box, style=filled, fillcolor=green];
+N4698 [label="Mem op type: Memory Transfer (Copy)
+Mem ptr: [0x35d8cb0]
+Device: HOST
+from: GPU 
+Avg time: 58.000000 ms, launched 1 times, 0.05 %", shape=box, style=filled, fillcolor=green];
+N108 [label="Mem op type: Memory Deallocation
+Mem ptr: [0x35d8cb0]
+Avg time: 17.000000 ms, launched 1 times, 0.01 %", shape=box, style=filled, fillcolor=green];
+N106 [label="Mem op type: Memory Allocation
+Mem ptr: [0x35d8a90]
+Avg time: 9.000000 ms, launched 1 times, 0.01 %", shape=box, style=filled, fillcolor=green];
+N99 [label="Mem op type: Memory Deallocation
+Mem ptr: [0x35d8ba0]
+Avg time: 13.000000 ms, launched 1 times, 0.01 %", shape=box, style=filled, fillcolor=green];
+N98 [label="Kernel: typeinfo name for JacobiSolveAccessor(Equatation const&, unsigned long, float, cl::sycl::device_selector const&)::JacobiIter
 Device: GPU
-Avg time: 46080.199219 ms, launched 5 times, 50.67 %", style=filled, fillcolor=orange];
-N90 [label="Mem op type: Memory Deallocation
-Mem ptr: [0x1249480]
-Avg time: 36.000000 ms, launched 1 times, 0.04 %", shape=box];
-N85 [label="Mem op type: Memory Allocation
-Mem ptr: [0x12497b0]
-Avg time: 36620.000000 ms, launched 1 times, 40.27 %", shape=box, style=filled, fillcolor=yellow];
-N87 [label="Mem op type: Memory Deallocation
-Mem ptr: [0x1249590]
-Avg time: 16.000000 ms, launched 1 times, 0.02 %", shape=box];
-N88 [label="Mem op type: Memory Allocation
-Mem ptr: [0x1249590]
-Avg time: 50.000000 ms, launched 1 times, 0.05 %", shape=box];
-N85 -> N84 [label="Edge:Memory Deallocation"];
-N88 -> N87 [label="Edge:Memory Deallocation"];
-N338 -> N90 [label="Edge:Memory Deallocation"];
-N97 -> N83 [label="write"];
-N83 -> N134 [label="write"];
-N94 -> N83 [label="write"];
-N91 -> N83 [label="read"];
-N134 -> N83 [label="write"];
-N85 -> N83 [label="read"];
-N134 -> N83 [label="read"];
-N134 -> N338 [label="read"];
-N83 -> N83 [label="write"];
-N83 -> N134 [label="read"];
-N88 -> N83 [label="read"];
-N83 -> N327 [label="read"];
-N91 -> N134 [label="write"];
-N83 -> N150 [label="read"];
-N150 -> N96 [label="Edge:Memory Deallocation"];
-N134 -> N134 [label="write"];
-N327 -> N93 [label="Edge:Memory Deallocation"];
+Avg time: 942.270020 ms, launched 100 times, 77.95 %", style=filled, fillcolor=red];
+N105 [label="Mem op type: Memory Deallocation
+Mem ptr: [0x35d8a90]
+Avg time: 12.000000 ms, launched 1 times, 0.01 %", shape=box, style=filled, fillcolor=green];
+N100 [label="Mem op type: Memory Allocation
+Mem ptr: [0x35d8ba0]
+Avg time: 3219.000000 ms, launched 1 times, 2.66 %", shape=box, style=filled, fillcolor=green];
+N4709 [label="Mem op type: Memory Transfer (Copy)
+Mem ptr: [0x35d8a90]
+Device: HOST
+from: GPU 
+Avg time: 57.000000 ms, launched 1 times, 0.05 %", shape=box, style=filled, fillcolor=green];
+N102 [label="Mem op type: Memory Deallocation
+Mem ptr: [0x358c040]
+Avg time: 13.000000 ms, launched 1 times, 0.01 %", shape=box, style=filled, fillcolor=green];
+N103 [label="Mem op type: Memory Allocation
+Mem ptr: [0x358c040]
+Avg time: 24.000000 ms, launched 1 times, 0.02 %", shape=box, style=filled, fillcolor=green];
+N103 -> N102 [label="Edge:Memory Deallocation"];
+N145 -> N4709 [label="read"];
+N103 -> N98 [label="read"];
+N98 -> N145 [label="read"];
+N98 -> N4698 [label="read"];
+N109 -> N98 [label="write"];
+N100 -> N98 [label="read"];
+N106 -> N145 [label="write"];
+N4709 -> N105 [label="Edge:Memory Deallocation"];
+N106 -> N98 [label="read"];
+N145 -> N98 [label="read"];
+N112 -> N98 [label="write"];
+N98 -> N145 [label="write"];
+N98 -> N158 [label="read"];
+N158 -> N111 [label="Edge:Memory Deallocation"];
+N98 -> N98 [label="write"];
+N100 -> N99 [label="Edge:Memory Deallocation"];
+N4698 -> N108 [label="Edge:Memory Deallocation"];
+N145 -> N98 [label="write"];
+N145 -> N145 [label="write"];
+N98 -> N98 [label="read"];
 }

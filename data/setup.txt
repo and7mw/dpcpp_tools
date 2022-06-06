@@ -9,3 +9,5 @@ make -j8
 SYCL_PRINT_EXECUTION_GRAPH="always"
 
 /opt/intel/oneapi/compiler/2021.1.1/linux/include/sycl/CL
+
+./a.out 2000 0.00000001 100 GPU
