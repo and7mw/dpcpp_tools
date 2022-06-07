@@ -179,18 +179,28 @@ public:
     std::unordered_map<int64_t, std::shared_ptr<Node>> nodes;
 
     struct edgeCompare {
+        // bool operator()(const std::shared_ptr<Edge>& lhs, const std::shared_ptr<Edge>& rhs) const {
+        //     return lhs->parent.lock()->id == rhs->parent.lock()->id &&
+        //            lhs->child.lock()->id == rhs->child.lock()->id &&
+        //            lhs->name == rhs->name;
+        // }
         bool operator()(const std::shared_ptr<Edge>& lhs, const std::shared_ptr<Edge>& rhs) const {
-            return lhs->parent.lock()->id == rhs->parent.lock()->id &&
-                   lhs->child.lock()->id == rhs->child.lock()->id &&
-                   lhs->name == rhs->name;
+            return (lhs->parent.lock()->id == rhs->parent.lock()->id &&
+                   lhs->child.lock()->id == rhs->child.lock()->id) ||
+                   (lhs->parent.lock()->id == rhs->child.lock()->id &&
+                   lhs->child.lock()->id == rhs->parent.lock()->id);
         }
     };
 
     struct hash {
+        // size_t operator()(const std::shared_ptr<Edge>& edge) const {
+        //     return std::hash<int64_t>{}(edge->parent.lock()->id) ^
+        //            (std::hash<int64_t>{}(edge->child.lock()->id) << 1) ^
+        //            (std::hash<std::string>{}(edge->name) << 2);
+        // }
         size_t operator()(const std::shared_ptr<Edge>& edge) const {
-            return std::hash<int64_t>{}(edge->parent.lock()->id) ^
-                   (std::hash<int64_t>{}(edge->child.lock()->id) << 1) ^
-                   (std::hash<std::string>{}(edge->name) << 2);
+            return std::hash<int64_t>{}(edge->parent.lock()->id) ||
+                   std::hash<int64_t>{}(edge->child.lock()->id);
         }
     };
 
@@ -208,10 +218,10 @@ public:
                 break;
             }
             case static_cast<uint16_t>(xpti::trace_point_type_t::edge_create): {
-                std::cout << "edge created"
-                          << " parent: " << event->source_id
-                          << " child: " << event->target_id
-                          << std::endl;
+                // std::cout << "edge created"
+                //           << " parent: " << event->source_id
+                //           << " child: " << event->target_id
+                //           << std::endl;
 
                 addEdge(event);
                 break;
@@ -219,16 +229,16 @@ public:
             case static_cast<uint16_t>(xpti::trace_point_type_t::task_begin): {
                 nodes[event->unique_id]->perfEntries.push_back(PerfEntry());
                 nodes[event->unique_id]->perfEntries.back().start = std::chrono::high_resolution_clock::now();
-                std::cout << event->unique_id << " START: " << nodes.at(event->unique_id)->name << std::endl;
+                // std::cout << event->unique_id << " START: " << nodes.at(event->unique_id)->name << std::endl;
                 break;
             }
             case static_cast<uint16_t>(xpti::trace_point_type_t::task_end): {
                 nodes[event->unique_id]->perfEntries.back().end = std::chrono::high_resolution_clock::now();
-                std::cout << event->unique_id << " END: " << nodes.at(event->unique_id)->name
+                // std::cout << event->unique_id << " END: " << nodes.at(event->unique_id)->name
                         // << " " << std::chrono::duration_cast<std::chrono::microseconds>(nodes[event->unique_id]->perfEntries.back().end - nodes[event->unique_id]->perfEntries.back().start).count()
                         // << " " << std::chrono::duration_cast<std::chrono::microseconds>(nodes[event->unique_id]->perfEntries.back().start).count()
                         // << " " << std::chrono::duration_cast<std::chrono::microseconds>(nodes[event->unique_id]->perfEntries.back().end).count()
-                        << std::endl;
+                        // << std::endl;
                 break;
             }
             default: {
@@ -254,7 +264,8 @@ public:
             total += node.second->getTotalTime();
         }
 
-        dump << "digraph graphname {" << std::endl;
+        // dump << "digraph graphname {" << std::endl;
+        dump << "graph graphname {" << std::endl;
         for (const auto& node : nodes) {
             dump << "N" << node.first;
             dump << " [label=\"" << node.second->serialize();
@@ -275,10 +286,19 @@ public:
             dump << "];" << std::endl;
         }
 
+        // oriented
+        // for (const auto& edge : edges) {
+        //     dump << "N" << edge->parent.lock()->id << " -> N" << edge->child.lock()->id
+        //     // << " [label=\"" << edge->name << "_" << std::to_string(edge->num) << "\"];" << std::endl;
+        //     << " [label=\"" << edge->name << "\"];" << std::endl;
+        // }
+
+        // PoC demo
         for (const auto& edge : edges) {
-            dump << "N" << edge->parent.lock()->id << " -> N" << edge->child.lock()->id
-            // << " [label=\"" << edge->name << "_" << std::to_string(edge->num) << "\"];" << std::endl;
-            << " [label=\"" << edge->name << "\"];" << std::endl;
+            if (edge->parent.lock()->id == edge->child.lock()->id) {
+                continue;
+            }
+            dump << "N" << edge->parent.lock()->id << " -- N" << edge->child.lock()->id << ";" << std::endl;
         }
 
         dump << "}" << std::endl;
