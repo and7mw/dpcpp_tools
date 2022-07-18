@@ -1,68 +1,66 @@
-graph graphname {
-N158 [label="Mem op type: Memory Transfer (Copy)
-Mem ptr: [0x405bc60]
+digraph graphname {
+N174 [label="Mem op type: Memory Transfer (Copy)
+Mem ptr: [0x2616810]
 Device: HOST
-from: GPU 
-Avg time: 99.820000 ms, launched 100 times, 8.27 %", shape=box, style=filled, fillcolor=green];
-N112 [label="Mem op type: Memory Allocation
-Mem ptr: [0x405bc60]
-Avg time: 14.830000 ms, launched 100 times, 1.23 %", shape=box, style=filled, fillcolor=green];
-N145 [label="Kernel: typeinfo name for JacobiSolveAccessor(Equatation const&, unsigned long, float, cl::sycl::device_selector const&)::Copy
+from: GPU to: HOST
+Avg time: 1843.00 ms, launched 1 times, 0.69 %", shape=box, style=filled, fillcolor=green];
+N144 [label="Mem op type: Memory Allocation
+Mem ptr: [0x2616810]
+Avg time: 18966.00 ms, launched 1 times, 7.06 %", shape=box, style=filled, fillcolor=green];
+N143 [label="Mem op type: Memory Deallocation
+Mem ptr: [0x2616810]
+Avg time: 1580.00 ms, launched 1 times, 0.59 %", shape=box, style=filled, fillcolor=green];
+N120 [label="Mem op type: Memory Deallocation
+Mem ptr: [0x1f55260]
+Avg time: 2617.00 ms, launched 1 times, 0.97 %", shape=box, style=filled, fillcolor=green];
+N116 [label="Mem op type: Memory Deallocation
+Mem ptr: [0x26164e0]
+Avg time: 1342.00 ms, launched 1 times, 0.50 %", shape=box, style=filled, fillcolor=green];
+N115 [label="Kernel: _ZTSZZ4mainENKUlRN2cl4sycl7handlerEE79_26clES2_E3Add
 Device: GPU
-Avg time: 122.900002 ms, launched 100 times, 10.18 %", style=filled, fillcolor=green];
-N111 [label="Mem op type: Memory Deallocation
-Mem ptr: [0x405bc60]
-Avg time: 20.570000 ms, launched 100 times, 1.70 %", shape=box, style=filled, fillcolor=green];
-N109 [label="Mem op type: Memory Allocation
-Mem ptr: [0x4b3b200]
-Avg time: 5.000000 ms, launched 1 times, 0.00 %", shape=box, style=filled, fillcolor=green];
-N4698 [label="Mem op type: Memory Transfer (Copy)
-Mem ptr: [0x4b3b200]
-Device: HOST
-from: GPU 
-Avg time: 91.000000 ms, launched 1 times, 0.08 %", shape=box, style=filled, fillcolor=green];
-N108 [label="Mem op type: Memory Deallocation
-Mem ptr: [0x4b3b200]
-Avg time: 17.000000 ms, launched 1 times, 0.01 %", shape=box, style=filled, fillcolor=green];
-N106 [label="Mem op type: Memory Allocation
-Mem ptr: [0x4b3afe0]
-Avg time: 6.000000 ms, launched 1 times, 0.00 %", shape=box, style=filled, fillcolor=green];
-N99 [label="Mem op type: Memory Deallocation
-Mem ptr: [0x4b3b0f0]
-Avg time: 18.000000 ms, launched 1 times, 0.01 %", shape=box, style=filled, fillcolor=green];
-N98 [label="Kernel: typeinfo name for JacobiSolveAccessor(Equatation const&, unsigned long, float, cl::sycl::device_selector const&)::JacobiIter
+Avg time: 118.00 ms, launched 1 times, 0.04 %", style=filled, fillcolor=green];
+N91 [label="Mem op type: Memory Allocation
+Mem ptr: [0x26163d0]
+Avg time: 5624.00 ms, launched 1 times, 2.09 %", shape=box, style=filled, fillcolor=green];
+N84 [label="Mem op type: Memory Deallocation
+Mem ptr: [0x26162c0]
+Avg time: 1228.00 ms, launched 1 times, 0.46 %", shape=box, style=filled, fillcolor=green];
+N117 [label="Mem op type: Memory Allocation
+Mem ptr: [0x26164e0]
+Avg time: 18394.00 ms, launched 1 times, 6.85 %", shape=box, style=filled, fillcolor=green];
+N83 [label="Kernel: _ZTSZZ4mainENKUlRN2cl4sycl7handlerEE63_26clES2_E3Sub
 Device: GPU
-Avg time: 914.590027 ms, launched 100 times, 75.79 %", style=filled, fillcolor=red];
-N105 [label="Mem op type: Memory Deallocation
-Mem ptr: [0x4b3afe0]
-Avg time: 18.000000 ms, launched 1 times, 0.01 %", shape=box, style=filled, fillcolor=green];
-N100 [label="Mem op type: Memory Allocation
-Mem ptr: [0x4b3b0f0]
-Avg time: 3123.000000 ms, launched 1 times, 2.59 %", shape=box, style=filled, fillcolor=green];
-N4709 [label="Mem op type: Memory Transfer (Copy)
-Mem ptr: [0x4b3afe0]
-Device: HOST
-from: GPU 
-Avg time: 86.000000 ms, launched 1 times, 0.07 %", shape=box, style=filled, fillcolor=green];
-N102 [label="Mem op type: Memory Deallocation
-Mem ptr: [0x404dbb0]
-Avg time: 24.000000 ms, launched 1 times, 0.02 %", shape=box, style=filled, fillcolor=green];
-N103 [label="Mem op type: Memory Allocation
-Mem ptr: [0x404dbb0]
-Avg time: 18.000000 ms, launched 1 times, 0.01 %", shape=box, style=filled, fillcolor=green];
-N100 -- N99;
-N98 -- N145;
-N112 -- N98;
-N109 -- N98;
-N106 -- N98;
-N100 -- N98;
-N103 -- N98;
-N106 -- N145;
-N98 -- N158;
-N158 -- N111;
-N98 -- N4698;
-N4698 -- N108;
-N145 -- N4709;
-N4709 -- N105;
-N103 -- N102;
+Avg time: 184047.00 ms, launched 1 times, 68.51 %", style=filled, fillcolor=red];
+N141 [label="Kernel: _ZTSZZ4mainENKUlRN2cl4sycl7handlerEE94_26clES2_E4Mult
+Device: GPU
+Avg time: 272.00 ms, launched 1 times, 0.10 %", style=filled, fillcolor=green];
+N90 [label="Mem op type: Memory Deallocation
+Mem ptr: [0x26163d0]
+Avg time: 1857.00 ms, launched 1 times, 0.69 %", shape=box, style=filled, fillcolor=green];
+N85 [label="Mem op type: Memory Allocation
+Mem ptr: [0x26162c0]
+Avg time: 11794.00 ms, launched 1 times, 4.39 %", shape=box, style=filled, fillcolor=green];
+N121 [label="Mem op type: Memory Allocation
+Mem ptr: [0x1f55260]
+Avg time: 5532.00 ms, launched 1 times, 2.06 %", shape=box, style=filled, fillcolor=green];
+N87 [label="Mem op type: Memory Deallocation
+Mem ptr: [0x26161b0]
+Avg time: 1964.00 ms, launched 1 times, 0.73 %", shape=box, style=filled, fillcolor=green];
+N88 [label="Mem op type: Memory Allocation
+Mem ptr: [0x26161b0]
+Avg time: 11481.00 ms, launched 1 times, 4.27 %", shape=box, style=filled, fillcolor=green];
+N88 -> N87 [label="Edge:Memory Deallocation"];
+N174 -> N143 [label="Edge:Memory Deallocation"];
+N85 -> N84 [label="Edge:Memory Deallocation"];
+N141 -> N174 [label="read"];
+N144 -> N141 [label="write"];
+N115 -> N141 [label="read"];
+N83 -> N141 [label="read"];
+N85 -> N83 [label="read"];
+N117 -> N116 [label="Edge:Memory Deallocation"];
+N91 -> N83 [label="write"];
+N121 -> N115 [label="write"];
+N88 -> N83 [label="read"];
+N117 -> N115 [label="read"];
+N83 -> N115 [label="read"];
 }

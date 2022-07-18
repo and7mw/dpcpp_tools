@@ -34,9 +34,11 @@ public:
 
 protected:
     std::string getPertCounters() const {
-        
+        std::stringstream stream;
+        stream << std::fixed << std::setprecision(2) << getAvgTime();
+        std::string s = stream.str();
 
-        std::string res = "Avg time: " + std::to_string(getAvgTime()) +
+        std::string res = "Avg time: " + s +
                           " ms, launched " + std::to_string(perfEntries.size()) + " times";
         return res;
     }
@@ -179,29 +181,29 @@ public:
     std::unordered_map<int64_t, std::shared_ptr<Node>> nodes;
 
     struct edgeCompare {
-        // bool operator()(const std::shared_ptr<Edge>& lhs, const std::shared_ptr<Edge>& rhs) const {
-        //     return lhs->parent.lock()->id == rhs->parent.lock()->id &&
-        //            lhs->child.lock()->id == rhs->child.lock()->id &&
-        //            lhs->name == rhs->name;
-        // }
         bool operator()(const std::shared_ptr<Edge>& lhs, const std::shared_ptr<Edge>& rhs) const {
-            return (lhs->parent.lock()->id == rhs->parent.lock()->id &&
-                   lhs->child.lock()->id == rhs->child.lock()->id) ||
-                   (lhs->parent.lock()->id == rhs->child.lock()->id &&
-                   lhs->child.lock()->id == rhs->parent.lock()->id);
+            return lhs->parent.lock()->id == rhs->parent.lock()->id &&
+                   lhs->child.lock()->id == rhs->child.lock()->id &&
+                   lhs->name == rhs->name;
         }
+        // bool operator()(const std::shared_ptr<Edge>& lhs, const std::shared_ptr<Edge>& rhs) const {
+        //     return (lhs->parent.lock()->id == rhs->parent.lock()->id &&
+        //            lhs->child.lock()->id == rhs->child.lock()->id) ||
+        //            (lhs->parent.lock()->id == rhs->child.lock()->id &&
+        //            lhs->child.lock()->id == rhs->parent.lock()->id);
+        // }
     };
 
     struct hash {
-        // size_t operator()(const std::shared_ptr<Edge>& edge) const {
-        //     return std::hash<int64_t>{}(edge->parent.lock()->id) ^
-        //            (std::hash<int64_t>{}(edge->child.lock()->id) << 1) ^
-        //            (std::hash<std::string>{}(edge->name) << 2);
-        // }
         size_t operator()(const std::shared_ptr<Edge>& edge) const {
-            return std::hash<int64_t>{}(edge->parent.lock()->id) ||
-                   std::hash<int64_t>{}(edge->child.lock()->id);
+            return std::hash<int64_t>{}(edge->parent.lock()->id) ^
+                   (std::hash<int64_t>{}(edge->child.lock()->id) << 1) ^
+                   (std::hash<std::string>{}(edge->name) << 2);
         }
+        // size_t operator()(const std::shared_ptr<Edge>& edge) const {
+        //     return std::hash<int64_t>{}(edge->parent.lock()->id) ||
+        //            std::hash<int64_t>{}(edge->child.lock()->id);
+        // }
     };
 
     std::unordered_set<std::shared_ptr<Edge>, hash, edgeCompare> edges;
@@ -249,9 +251,9 @@ public:
 
     ~ExecGraph() {
         const std::vector<std::pair<float, std::string>> painter{
-            {75.0f, "red"},
-            {50.0f, "orange"},
-            {25.0f, "yellow"},
+            {50.0f, "red"},
+            {20.0f, "orange"},
+            {10.0f, "yellow"},
             {0.0f, "green"},
         };
 
@@ -265,7 +267,7 @@ public:
         }
 
         // dump << "digraph graphname {" << std::endl;
-        dump << "graph graphname {" << std::endl;
+        dump << "digraph graphname {" << std::endl;
         for (const auto& node : nodes) {
             dump << "N" << node.first;
             dump << " [label=\"" << node.second->serialize();
@@ -287,19 +289,19 @@ public:
         }
 
         // oriented
-        // for (const auto& edge : edges) {
-        //     dump << "N" << edge->parent.lock()->id << " -> N" << edge->child.lock()->id
-        //     // << " [label=\"" << edge->name << "_" << std::to_string(edge->num) << "\"];" << std::endl;
-        //     << " [label=\"" << edge->name << "\"];" << std::endl;
-        // }
-
-        // PoC demo
         for (const auto& edge : edges) {
-            if (edge->parent.lock()->id == edge->child.lock()->id) {
-                continue;
-            }
-            dump << "N" << edge->parent.lock()->id << " -- N" << edge->child.lock()->id << ";" << std::endl;
+            dump << "N" << edge->parent.lock()->id << " -> N" << edge->child.lock()->id
+            // << " [label=\"" << edge->name << "_" << std::to_string(edge->num) << "\"];" << std::endl;
+            << " [label=\"" << edge->name << "\"];" << std::endl;
         }
+
+        // // PoC demo
+        // for (const auto& edge : edges) {
+        //     if (edge->parent.lock()->id == edge->child.lock()->id) {
+        //         continue;
+        //     }
+        //     dump << "N" << edge->parent.lock()->id << " -- N" << edge->child.lock()->id << ";" << std::endl;
+        // }
 
         dump << "}" << std::endl;
 

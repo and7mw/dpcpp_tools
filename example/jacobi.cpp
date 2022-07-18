@@ -174,7 +174,7 @@ std::vector<float> JacobiSolveAccessor(const Equatation &eq, const size_t numIte
                 {
                 sycl::buffer<float, 1> err_vector(errorVector.data(), errorVector.size());
 
-                    std::cout << "=========== JacobiIter START" << std::endl;
+                    // std::cout << "=========== JacobiIter START" << std::endl;
                     queue.submit([&](sycl::handler &cgh) {
                         auto A_acc = A_matrix.get_access<sycl::access::mode::read>(cgh);
                         auto B_acc = B_vector.get_access<sycl::access::mode::read>(cgh);
@@ -210,9 +210,9 @@ std::vector<float> JacobiSolveAccessor(const Equatation &eq, const size_t numIte
 
                     });
                     queue.wait_and_throw();
-                    std::cout << "=========== JacobiIter END" << std::endl;
+                    // std::cout << "=========== JacobiIter END" << std::endl;
 
-                    std::cout << "=========== Copy START" << std::endl;
+                    // std::cout << "=========== Copy START" << std::endl;
                     queue.submit([&](sycl::handler &cgh) {
                         auto X_acc = X_vector.get_access<sycl::access::mode::read>(cgh);
                         auto X_prev_acc = X_vector_prev.get_access<sycl::access::mode::write>(cgh);
@@ -224,7 +224,7 @@ std::vector<float> JacobiSolveAccessor(const Equatation &eq, const size_t numIte
 
                     });
                     queue.wait_and_throw();
-                    std::cout << "=========== Copy END" << std::endl;
+                    // std::cout << "=========== Copy END" << std::endl;
                 }
 
                 iter++;
