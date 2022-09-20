@@ -1,5 +1,3 @@
 /build
 .vscode
-# save.txt
-# *.dot
-# *.out
+*.dot

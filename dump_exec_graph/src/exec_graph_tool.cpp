@@ -1,5 +1,5 @@
 #include "exec_graph.h"
-#include "xpti_trace_framework.h"
+#include "xpti/xpti_trace_framework.h"
 
 #include <chrono>
 #include <cstdio>

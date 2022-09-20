@@ -9,8 +9,8 @@
 #include <fstream>
 #include <iostream>
 #include <functional>
-#include "xpti_trace_framework.h"
-#include "demangle.h"
+#include "xpti/xpti_trace_framework.h"
+// #include "demangle.h"
 #include <iomanip>
 
 struct PerfEntry {
@@ -313,11 +313,11 @@ private:
         const xpti::payload_t *payload = xptiQueryPayload(event);
         std::string name;
 
-        if (payload->name_sid != xpti::invalid_id) {
-          name = payload->name;
-        } else {
-          throw std::runtime_error("Invalid event name!");
-        }
+        // if (payload->name_sid != xpti::invalid_id) {
+        //   name = payload->name;
+        // } else {
+        //   throw std::runtime_error("Invalid event name!");
+        // }
 
         bool isKernel = false;
         for (auto &it : *metadata) {
@@ -351,11 +351,11 @@ private:
 
         const xpti::payload_t *payload = xptiQueryPayload(event);
         std::string name;
-        if (payload->name_sid != xpti::invalid_id) {
-          name = payload->name;
-        } else {
-          throw std::runtime_error("Invalid event name!");
-        }
+        // if (payload->name_sid != xpti::invalid_id) {
+        //   name = payload->name;
+        // } else {
+        //   throw std::runtime_error("Invalid event name!");
+        // }
         auto edge = std::make_shared<Edge>(parent, child, name);
         edge->num = count;
         edges.insert(edge);

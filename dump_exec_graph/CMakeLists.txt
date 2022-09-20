@@ -1,0 +1,20 @@
+if(NOT DEFINED XPTI_INCLUDE)
+    message(FATAL_ERROR "Path to XPTI include didn't provide.")
+endif()
+
+if(NOT DEFINED XPTIFW_DISPATHER)
+    message(FATAL_ERROR "Path to XPTIFW dispatcher didn't provide.")
+endif()
+
+file(GLOB INCLUDE ./include/*.h)
+file(GLOB SOURCE ./src/*.cpp)
+add_library(dump_exec_graph_lib SHARED ${INCLUDE} ${SOURCE})
+
+target_include_directories(dump_exec_graph_lib PRIVATE ./include)
+target_include_directories(dump_exec_graph_lib PRIVATE ${XPTI_INCLUDE})
+
+add_library(xptifw SHARED IMPORTED)
+set_property(TARGET xptifw PROPERTY IMPORTED_LOCATION ${XPTIFW_DISPATHER})
+target_link_libraries(dump_exec_graph_lib xptifw)
+
+add_executable(dump_exec_graph ./main.cpp)
