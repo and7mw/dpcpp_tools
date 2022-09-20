@@ -6,9 +6,9 @@ if(NOT DEFINED XPTIFW_DISPATHER)
     message(FATAL_ERROR "Path to XPTIFW dispatcher didn't provide.")
 endif()
 
-file(GLOB INCLUDE ./include/*.h)
-file(GLOB SOURCE ./src/*.cpp)
-add_library(dump_exec_graph_lib SHARED ${INCLUDE} ${SOURCE})
+file(GLOB INCLUDE_DUMP_EXEC_GRAPH ./include/*.h)
+file(GLOB SOURCE_DUMP_EXEC_GRAPH ./src/*.cpp)
+add_library(dump_exec_graph_lib SHARED ${INCLUDE_DUMP_EXEC_GRAPH} ${SOURCE_DUMP_EXEC_GRAPH})
 
 target_include_directories(dump_exec_graph_lib PRIVATE ./include)
 target_include_directories(dump_exec_graph_lib PRIVATE ${XPTI_INCLUDE})
