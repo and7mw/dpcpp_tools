@@ -1,11 +1,3 @@
-if(NOT DEFINED XPTI_INCLUDE)
-    message(FATAL_ERROR "Path to XPTI include didn't provide.")
-endif()
-
-if(NOT DEFINED XPTIFW_DISPATHER)
-    message(FATAL_ERROR "Path to XPTIFW dispatcher didn't provide.")
-endif()
-
 file(GLOB INCLUDE_DUMP_EXEC_GRAPH ./include/*.h)
 file(GLOB SOURCE_DUMP_EXEC_GRAPH ./src/*.cpp)
 add_library(dump_exec_graph_lib SHARED ${INCLUDE_DUMP_EXEC_GRAPH} ${SOURCE_DUMP_EXEC_GRAPH})

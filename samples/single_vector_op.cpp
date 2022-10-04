@@ -18,7 +18,7 @@ int main(int argc, char* argv[]) {
 
         std::vector<int> A(size, A_val), B(size, B_val), result(size);
 
-        const size_t iter_num = 2;
+        const size_t iter_num = 1;
         
         sycl::buffer<int, 1> A_buffer(A.data(), A.size());
         sycl::buffer<int, 1> B_buffer(B.data(), B.size());
