@@ -32,10 +32,7 @@ XPTI_CALLBACK_API void taskCallback(uint16_t trace_type,
 XPTI_CALLBACK_API void xptiTraceInit(unsigned int major_version,
                                      unsigned int minor_version,
                                      const char *version_str,
-                                     const char *stream_name) {
-    // TODO: remove
-    std::cout << "========== xptiTraceInit ==========" << std::endl;
-    
+                                     const char *stream_name) {    
     const std::string expectedStream("sycl");
 
     if (stream_name == expectedStream) {
@@ -63,10 +60,7 @@ XPTI_CALLBACK_API void xptiTraceInit(unsigned int major_version,
     }
 }
 
-XPTI_CALLBACK_API void xptiTraceFinish(const char *stream_name) {
-    // TODO: remove
-    std::cout << "========== xptiTraceFinish ==========" << std::endl;
-}
+XPTI_CALLBACK_API void xptiTraceFinish(const char *stream_name) {}
 
 namespace {
     const std::unordered_map<std::string, std::vector<std::string>> attrForNode = {
@@ -100,7 +94,7 @@ XPTI_CALLBACK_API void nodeCreateCallback(uint16_t trace_type,
 
     metainfo["node_type"] = nodeType;
     if (attrForNode.count(nodeType)) {
-        const auto& attrs = attrForNode.at("nodeType");
+        const auto& attrs = attrForNode.at(nodeType);
         for (const auto &item : *metadata) {
             const std::string typeInfo = xptiLookupString(item.first);
             if (std::find(attrs.begin(), attrs.end(), typeInfo) != attrs.end()) {
@@ -138,7 +132,7 @@ XPTI_CALLBACK_API void taskCallback(uint16_t trace_type,
                                     uint64_t instance,
                                     const void *user_data) {
     std::lock_guard<std::mutex> lock(mutex);
-    
+
     if (trace_type == static_cast<uint16_t>(xpti::trace_point_type_t::task_begin)) {
         execGraph->addNodeStartExec(event->unique_id);
     } else if (trace_type == static_cast<uint16_t>(xpti::trace_point_type_t::task_end)) {

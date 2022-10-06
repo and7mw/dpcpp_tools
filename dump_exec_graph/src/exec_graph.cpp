@@ -4,6 +4,7 @@
 #include <chrono>
 #include <sstream>
 #include <iomanip>
+#include <iostream>
 
 void dumpExecGraphTool::ExecGraph::addNode(const size_t id,
                                            const std::unordered_map<std::string, std::string> &metainfo) {
@@ -50,7 +51,7 @@ void dumpExecGraphTool::ExecGraph::serialize() const {
 
     std::ofstream dump;
     // TODO: make path os agnostic
-    dump.open("/home/dump.dot");
+    dump.open("/home/maxim/master_science_work/dump.dot");
     if (dump.fail()) {
         throw std::runtime_error("Opening file for dumping failed!");
     }
