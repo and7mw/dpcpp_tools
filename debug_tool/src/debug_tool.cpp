@@ -120,16 +120,7 @@ XPTI_CALLBACK_API void xptiTraceInit(unsigned int major_version,
                                      const char *stream_name) {
   // The basic collector will take in streams from anyone as we are just
   // printing out the stream data
-
-  // sycl.experimental.level_zero.call
-  // sycl.experimental.level_zero.debug
-  // sycl.experimental.buffer
-  // sycl.experimental.mem_alloc
-  // sycl
-  // sycl.pi
-  // sycl.pi.debug
-
-  if (std::string(stream_name) == std::string("sycl")) {
+  if (stream_name) {
     // Register this stream to get the stream ID; This stream may already have
     // been registered by the framework and will return the previously
     // registered stream ID
@@ -142,42 +133,42 @@ XPTI_CALLBACK_API void xptiTraceInit(unsigned int major_version,
         GStreamID, (uint16_t)xpti::trace_point_type_t::node_create, tpCallback);
     xptiRegisterCallback(
         GStreamID, (uint16_t)xpti::trace_point_type_t::edge_create, tpCallback);
-    // xptiRegisterCallback(GStreamID,
-    //                      (uint16_t)xpti::trace_point_type_t::region_begin,
-    //                      tpCallback);
-    // xptiRegisterCallback(
-    //     GStreamID, (uint16_t)xpti::trace_point_type_t::region_end, tpCallback);
+    xptiRegisterCallback(GStreamID,
+                         (uint16_t)xpti::trace_point_type_t::region_begin,
+                         tpCallback);
+    xptiRegisterCallback(
+        GStreamID, (uint16_t)xpti::trace_point_type_t::region_end, tpCallback);
     xptiRegisterCallback(
         GStreamID, (uint16_t)xpti::trace_point_type_t::task_begin, tpCallback);
     xptiRegisterCallback(
         GStreamID, (uint16_t)xpti::trace_point_type_t::task_end, tpCallback);
-    // xptiRegisterCallback(GStreamID,
-    //                      (uint16_t)xpti::trace_point_type_t::barrier_begin,
-    //                      tpCallback);
-    // xptiRegisterCallback(
-    //     GStreamID, (uint16_t)xpti::trace_point_type_t::barrier_end, tpCallback);
-    // xptiRegisterCallback(
-    //     GStreamID, (uint16_t)xpti::trace_point_type_t::lock_begin, tpCallback);
-    // xptiRegisterCallback(
-    //     GStreamID, (uint16_t)xpti::trace_point_type_t::lock_end, tpCallback);
-    // xptiRegisterCallback(GStreamID,
-    //                      (uint16_t)xpti::trace_point_type_t::transfer_begin,
-    //                      tpCallback);
-    // xptiRegisterCallback(GStreamID,
-    //                      (uint16_t)xpti::trace_point_type_t::transfer_end,
-    //                      tpCallback);
-    // xptiRegisterCallback(GStreamID,
-    //                      (uint16_t)xpti::trace_point_type_t::thread_begin,
-    //                      tpCallback);
-    // xptiRegisterCallback(
-    //     GStreamID, (uint16_t)xpti::trace_point_type_t::thread_end, tpCallback);
-    // xptiRegisterCallback(
-    //     GStreamID, (uint16_t)xpti::trace_point_type_t::wait_begin, tpCallback);
-    // xptiRegisterCallback(
-    //     GStreamID, (uint16_t)xpti::trace_point_type_t::wait_end, tpCallback);
-    // xptiRegisterCallback(GStreamID, (uint16_t)xpti::trace_point_type_t::signal,
-    //                      tpCallback);
-    printf("Registered all callbacks for stream: %s\n", stream_name);
+    xptiRegisterCallback(GStreamID,
+                         (uint16_t)xpti::trace_point_type_t::barrier_begin,
+                         tpCallback);
+    xptiRegisterCallback(
+        GStreamID, (uint16_t)xpti::trace_point_type_t::barrier_end, tpCallback);
+    xptiRegisterCallback(
+        GStreamID, (uint16_t)xpti::trace_point_type_t::lock_begin, tpCallback);
+    xptiRegisterCallback(
+        GStreamID, (uint16_t)xpti::trace_point_type_t::lock_end, tpCallback);
+    xptiRegisterCallback(GStreamID,
+                         (uint16_t)xpti::trace_point_type_t::transfer_begin,
+                         tpCallback);
+    xptiRegisterCallback(GStreamID,
+                         (uint16_t)xpti::trace_point_type_t::transfer_end,
+                         tpCallback);
+    xptiRegisterCallback(GStreamID,
+                         (uint16_t)xpti::trace_point_type_t::thread_begin,
+                         tpCallback);
+    xptiRegisterCallback(
+        GStreamID, (uint16_t)xpti::trace_point_type_t::thread_end, tpCallback);
+    xptiRegisterCallback(
+        GStreamID, (uint16_t)xpti::trace_point_type_t::wait_begin, tpCallback);
+    xptiRegisterCallback(
+        GStreamID, (uint16_t)xpti::trace_point_type_t::wait_end, tpCallback);
+    xptiRegisterCallback(GStreamID, (uint16_t)xpti::trace_point_type_t::signal,
+                         tpCallback);
+    printf("Registered all callbacks\n");
   } else {
     // handle the case when a bad stream name has been provided
     std::cerr << "Invalid stream - no callbacks registered!\n";
@@ -218,6 +209,9 @@ XPTI_CALLBACK_API void tpCallback(uint16_t TraceType,
   // Lock while we print information
   std::lock_guard<std::mutex> Lock(GIOMutex);
   // Print the record information
+  if (UserData != nullptr) {
+    std::cout << std::string(reinterpret_cast<const char *>(UserData)) << std::endl;
+  }
   printf("%-25lu: name=%-35s cpu=%3d event_id=%10lu\n", Time, Name.c_str(), CPU,
          ID);
   // Go through all available meta-data for an event and print it out
