@@ -11,12 +11,22 @@ endif()
 
 set(CMAKE_CXX_STANDARD 17)
 
+# dump exec graph
 if(NOT DEFINED ENABLE_DUMP_EXEC_GRAPH)
     set(ENABLE_DUMP_EXEC_GRAPH ON)
 endif()
 
 if (ENABLE_DUMP_EXEC_GRAPH)
     add_subdirectory(dump_exec_graph)
+endif()
+
+# profiler
+if(NOT DEFINED ENABLE_PROFILER)
+    set(ENABLE_PROFILER ON)
+endif()
+
+if (ENABLE_PROFILER)
+    add_subdirectory(profiler)
 endif()
 
 # TODO: remove!
