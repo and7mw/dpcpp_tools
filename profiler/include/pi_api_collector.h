@@ -7,6 +7,7 @@
 namespace profilerTool {
     class piApiCollector {
       public:
+        // TODO: extract
         struct Record {
             std::chrono::high_resolution_clock::time_point start, end;
         };

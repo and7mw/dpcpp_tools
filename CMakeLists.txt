@@ -29,5 +29,8 @@ if (ENABLE_PROFILER)
     add_subdirectory(profiler)
 endif()
 
+# utils
+add_subdirectory(utils)
+
 # TODO: remove!
 add_subdirectory(debug_tool)

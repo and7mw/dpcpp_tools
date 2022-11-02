@@ -4,9 +4,12 @@ add_library(dump_exec_graph_lib SHARED ${INCLUDE_DUMP_EXEC_GRAPH} ${SOURCE_DUMP_
 
 target_include_directories(dump_exec_graph_lib PRIVATE ./include)
 target_include_directories(dump_exec_graph_lib PRIVATE ${XPTI_INCLUDE})
+target_include_directories(dump_exec_graph_lib PRIVATE ../utils)
 
 add_library(xptifw SHARED IMPORTED)
 set_property(TARGET xptifw PROPERTY IMPORTED_LOCATION ${XPTIFW_DISPATHER})
 target_link_libraries(dump_exec_graph_lib xptifw)
+
+target_link_libraries(dump_exec_graph_lib xpti_utils_lib)
 
 add_executable(dump_exec_graph ./main.cpp)
