@@ -4,7 +4,7 @@ add_library(profiler_lib SHARED ${INCLUDE_PROFILER} ${SOURCE_PROFILER})
 
 target_include_directories(profiler_lib PRIVATE ./include)
 target_include_directories(profiler_lib PRIVATE ${XPTI_INCLUDE})
-target_include_directories(dump_exec_graph_lib PRIVATE ../utils)
+target_include_directories(profiler_lib PRIVATE ../utils)
 
 add_library(xptifw SHARED IMPORTED)
 set_property(TARGET xptifw PROPERTY IMPORTED_LOCATION ${XPTIFW_DISPATHER})

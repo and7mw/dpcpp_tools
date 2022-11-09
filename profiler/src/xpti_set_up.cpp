@@ -1,4 +1,6 @@
-#include "exec_graph.h"
+#include "pi_api_collector.h"
+#include "sycl_collector.h"
+
 #include "xpti_utils.h"
 #include "xpti/xpti_trace_framework.hpp"
 
@@ -8,37 +10,49 @@
 #include <unordered_map>
 #include <algorithm>
 
-std::unique_ptr<dumpExecGraphTool::ExecGraph> execGraph = nullptr;
+profilerTool::piApiCollector* piApiCollectorObj = nullptr;
+profilerTool::syclCollector* syclCollectorObj = nullptr;
+
 std::mutex mutex;
 
-XPTI_CALLBACK_API void nodeCreateCallback(uint16_t trace_type,
+XPTI_CALLBACK_API void piApiCallback(uint16_t trace_type,
+                                     xpti::trace_event_data_t *parent,
+                                     xpti::trace_event_data_t *event,
+                                     uint64_t instance,
+                                     const void *user_data);
+
+XPTI_CALLBACK_API void taskCreateCallback(uint16_t trace_type,
                                           xpti::trace_event_data_t *parent,
                                           xpti::trace_event_data_t *event,
                                           uint64_t instance,
                                           const void *user_data);
 
-XPTI_CALLBACK_API void edgeCreateCallback(uint16_t trace_type,
-                                          xpti::trace_event_data_t *parent,
-                                          xpti::trace_event_data_t *event,
-                                          uint64_t instance,
-                                          const void *user_data);
-
-XPTI_CALLBACK_API void taskCallback(uint16_t trace_type,
-                                    xpti::trace_event_data_t *parent,
-                                    xpti::trace_event_data_t *event,
-                                    uint64_t instance,
-                                    const void *user_data);
+XPTI_CALLBACK_API void taskExecCallback(uint16_t trace_type,
+                                        xpti::trace_event_data_t *parent,
+                                        xpti::trace_event_data_t *event,
+                                        uint64_t instance,
+                                        const void *user_data);
 
 // TODO: handle major_version, minor_version, version_str?
 XPTI_CALLBACK_API void xptiTraceInit(unsigned int major_version,
                                      unsigned int minor_version,
                                      const char *version_str,
-                                     const char *stream_name) {    
-    const std::string expectedStream("sycl");
+                                     const char *stream_name) {       
+    const std::string piApiStream("sycl.pi");
+    const std::string syclStream("sycl");
 
-    if (stream_name == expectedStream) {
-        execGraph = std::make_unique<dumpExecGraphTool::ExecGraph>();
+    if (stream_name == piApiStream) {
+        piApiCollectorObj = new profilerTool::piApiCollector();
+        const auto streamId = xptiRegisterStream(stream_name);
 
+        xptiRegisterCallback(streamId,
+                             static_cast<uint16_t>(xpti::trace_point_type_t::function_begin),
+                             piApiCallback);
+        xptiRegisterCallback(streamId,
+                             static_cast<uint16_t>(xpti::trace_point_type_t::function_end),
+                             piApiCallback); 
+    } else if (stream_name == syclStream) {
+        syclCollectorObj = new profilerTool::syclCollector();
         const auto streamId = xptiRegisterStream(stream_name);
 
         // TODO: handle case with several graphs
@@ -48,61 +62,60 @@ XPTI_CALLBACK_API void xptiTraceInit(unsigned int major_version,
 
         xptiRegisterCallback(streamId,
                              static_cast<uint16_t>(xpti::trace_point_type_t::node_create),
-                             nodeCreateCallback);
-        xptiRegisterCallback(streamId,
-                             static_cast<uint16_t>(xpti::trace_point_type_t::edge_create),
-                             edgeCreateCallback);
+                             taskCreateCallback);
         xptiRegisterCallback(streamId,
                              static_cast<uint16_t>(xpti::trace_point_type_t::task_begin),
-                             taskCallback);
+                             taskExecCallback);
         xptiRegisterCallback(streamId,
                              static_cast<uint16_t>(xpti::trace_point_type_t::task_end),
-                             taskCallback);
+                             taskExecCallback);
     }
 }
 
-XPTI_CALLBACK_API void xptiTraceFinish(const char *stream_name) {}
+XPTI_CALLBACK_API void xptiTraceFinish(const char *stream_name) {
+}
 
-XPTI_CALLBACK_API void nodeCreateCallback(uint16_t trace_type,
+XPTI_CALLBACK_API void piApiCallback(uint16_t trace_type,
+                                     xpti::trace_event_data_t *parent,
+                                     xpti::trace_event_data_t *event,
+                                     uint64_t instance,
+                                     const void *user_data) {
+    std::lock_guard<std::mutex> lock(mutex);
+
+    if (trace_type == static_cast<uint16_t>(xpti::trace_point_type_t::function_begin)) {
+        piApiCollectorObj->addFuncStartExec(static_cast<const char*>(user_data), instance);
+    } else if (trace_type == static_cast<uint16_t>(xpti::trace_point_type_t::function_end)) {
+        piApiCollectorObj->addFuncEndExec(static_cast<const char*>(user_data), instance);
+    } else {
+        throw std::runtime_error("Can't handle trace point: " + std::to_string(trace_type) +
+                                 ". piApiCallback supports only function_begin and function_end!");
+    }
+}
+
+XPTI_CALLBACK_API void taskCreateCallback(uint16_t trace_type,
                                           xpti::trace_event_data_t *parent,
                                           xpti::trace_event_data_t *event,
                                           uint64_t instance,
                                           const void *user_data) {
     std::lock_guard<std::mutex> lock(mutex);
 
-    const auto& nodeInfo = xptiUtils::extractTaskInfo(event, user_data);
-
-    execGraph->addNode(event->unique_id, nodeInfo);
+    const auto& taskInfo = xptiUtils::extractTaskInfo(event, user_data);
+    syclCollectorObj->addTask(event->unique_id, taskInfo);
 }
 
-XPTI_CALLBACK_API void edgeCreateCallback(uint16_t trace_type,
-                                          xpti::trace_event_data_t *parent,
-                                          xpti::trace_event_data_t *event,
-                                          uint64_t instance,
-                                          const void *user_data) {
-    std::lock_guard<std::mutex> lock(mutex);
-
-    const auto payload = xptiQueryPayload(event);
-    std::string name = "<unknown>";
-    if (payload->name_sid() != xpti::invalid_id) {
-        name = payload->name;
-    }
-    execGraph->addEdge(event->source_id, event->target_id, name);
-}
-
-XPTI_CALLBACK_API void taskCallback(uint16_t trace_type,
-                                    xpti::trace_event_data_t *parent,
-                                    xpti::trace_event_data_t *event,
-                                    uint64_t instance,
-                                    const void *user_data) {
+XPTI_CALLBACK_API void taskExecCallback(uint16_t trace_type,
+                                        xpti::trace_event_data_t *parent,
+                                        xpti::trace_event_data_t *event,
+                                        uint64_t instance,
+                                        const void *user_data) {
     std::lock_guard<std::mutex> lock(mutex);
 
     if (trace_type == static_cast<uint16_t>(xpti::trace_point_type_t::task_begin)) {
-        execGraph->addNodeStartExec(event->unique_id);
+        syclCollectorObj->addStartTask(event->unique_id);
     } else if (trace_type == static_cast<uint16_t>(xpti::trace_point_type_t::task_end)) {
-        execGraph->addNodeEndExec(event->unique_id);
+        syclCollectorObj->addEndTask(event->unique_id);
     } else {
         throw std::runtime_error("Can't handle trace point: " + std::to_string(trace_type) +
-                                 ". Support only task_begin and task_end!");
+                                 ". taskExecCallback supports only task_begin and task_end!");
     }
 }
