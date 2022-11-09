@@ -90,26 +90,48 @@ XPTI_CALLBACK_API void xptiTraceFinish(const char *stream_name) {
                   << std::endl;
         headerPrinted = 1;
     }
-    // if (syclCollectorObj != nullptr) {
+    if (stream_name == std::string("sycl")) {
+        if (syclCollectorObj != nullptr) {
+            const auto& syclReport = syclCollectorObj->getProfileReport();
 
-    //     delete syclCollectorObj;
-    //     syclCollectorObj = nullptr;
-    // }
+            for (const auto& deviceTable : syclReport) {
+                std::cout << "============== " << deviceTable.first << " ==============" << std::endl;
+
+                const auto& report = deviceTable.second;
+
+                for (const auto &entry : report) {
+                    std::cout << std::fixed << std::setprecision(2)
+                              << " " << entry.timePercent << "%"
+                              << " " << entry.totalTime
+                              << " " << entry.count
+                              << " " << entry.avg
+                              << " " << entry.min
+                              << " " << entry.max
+                              << " " << entry.name
+                              << std::endl;
+                }
+            }
+            
+
+            delete syclCollectorObj;
+            syclCollectorObj = nullptr;
+        }
+    }
     if (stream_name == std::string("sycl.pi")) {
         if (piApiCollectorObj != nullptr) {
             const auto& piApiReport = piApiCollectorObj->getProfileReport();
 
-            for (const auto &entry : piApiReport) {
-                std::cout << std::fixed << std::setprecision(2)
-                          << std::setw(len) << entry.timePercent << "%"
-                          << std::setw(len) << entry.totalTime
-                          << std::setw(len) << entry.count
-                          << std::setw(len) << entry.avg
-                          << std::setw(len) << entry.min
-                          << std::setw(len) << entry.max
-                          << std::setw(30) << entry.name
-                          << std::endl;
-            }
+            // for (const auto &entry : piApiReport) {
+            //     std::cout << std::fixed << std::setprecision(2)
+            //               << std::setw(len) << entry.timePercent << "%"
+            //               << std::setw(len) << entry.totalTime
+            //               << std::setw(len) << entry.count
+            //               << std::setw(len) << entry.avg
+            //               << std::setw(len) << entry.min
+            //               << std::setw(len) << entry.max
+            //               << std::setw(30) << entry.name
+            //               << std::endl;
+            // }
 
             delete piApiCollectorObj;
             piApiCollectorObj = nullptr;

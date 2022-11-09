@@ -5,6 +5,8 @@
 #include <chrono>
 #include <vector>
 
+#include "xpti_utils.h"
+
 namespace profilerTool {
     class syclCollector {
       public:
@@ -16,6 +18,8 @@ namespace profilerTool {
         void addTask(const uint64_t id, const std::unordered_map<std::string, std::string> &info);
         void addStartTask(const uint64_t id);
         void addEndTask(const uint64_t id);
+
+        std::unordered_map<std::string, std::vector<xptiUtils::profileEntry>> getProfileReport() const;
 
       private:
         std::unordered_map<uint64_t, std::unordered_map<std::string, std::string>> tasksInfo;

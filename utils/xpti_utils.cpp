@@ -12,6 +12,7 @@ namespace {
                                                         "kernel_name"}},
         // TODO: fix copy_from / copy_to
         {"memory_transfer_node", std::vector<std::string>{"copy_from_id",
+                                                          "sycl_device",
                                                           "copy_to_id",
                                                           "memory_object"}},
         {"memory_allocation_node", std::vector<std::string>{"memory_object",

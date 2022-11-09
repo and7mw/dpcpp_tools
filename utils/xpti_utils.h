@@ -8,6 +8,7 @@
 
 namespace xptiUtils {
     struct profileEntry {
+        profileEntry() = default;
         explicit profileEntry(const std::string& name) : name(name) {}
         float timePercent = 0.0f;
         size_t totalTime = 0;
