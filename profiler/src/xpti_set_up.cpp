@@ -9,6 +9,8 @@
 #include <mutex>
 #include <unordered_map>
 #include <algorithm>
+#include <vector>
+#include <iomanip>
 
 profilerTool::piApiCollector* piApiCollectorObj = nullptr;
 profilerTool::syclCollector* syclCollectorObj = nullptr;
@@ -72,7 +74,47 @@ XPTI_CALLBACK_API void xptiTraceInit(unsigned int major_version,
     }
 }
 
+size_t headerPrinted = 0;
+
 XPTI_CALLBACK_API void xptiTraceFinish(const char *stream_name) {
+    const size_t len = 10;
+
+    if (headerPrinted != 1) {
+        std::cout << std::setw(len + 2) << "Time(%)"
+                  << std::setw(len) << "Time(ms)"
+                  << std::setw(len) << "Calls"
+                  << std::setw(len) << "Avg(ms)"
+                  << std::setw(len) << "Min(ms)"
+                  << std::setw(len) << "Max(ms)"
+                  << std::setw(25) << "Name"
+                  << std::endl;
+        headerPrinted = 1;
+    }
+    // if (syclCollectorObj != nullptr) {
+
+    //     delete syclCollectorObj;
+    //     syclCollectorObj = nullptr;
+    // }
+    if (stream_name == std::string("sycl.pi")) {
+        if (piApiCollectorObj != nullptr) {
+            const auto& piApiReport = piApiCollectorObj->getProfileReport();
+
+            for (const auto &entry : piApiReport) {
+                std::cout << std::fixed << std::setprecision(2)
+                          << std::setw(len) << entry.timePercent << "%"
+                          << std::setw(len) << entry.totalTime
+                          << std::setw(len) << entry.count
+                          << std::setw(len) << entry.avg
+                          << std::setw(len) << entry.min
+                          << std::setw(len) << entry.max
+                          << std::setw(30) << entry.name
+                          << std::endl;
+            }
+
+            delete piApiCollectorObj;
+            piApiCollectorObj = nullptr;
+        }
+    }
 }
 
 XPTI_CALLBACK_API void piApiCallback(uint16_t trace_type,
