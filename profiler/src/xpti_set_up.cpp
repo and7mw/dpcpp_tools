@@ -88,7 +88,7 @@ XPTI_CALLBACK_API void xptiTraceFinish(const char *stream_name) {
                   << std::setw(len) << "Min(ms)"
                   << std::setw(len) << "Max(ms)"
                   << std::setw(25) << "Name"
-                  << std::endl;
+                  << std::endl << std::endl;;
         headerPrinted = 1;
     }
     if (stream_name == std::string("sycl")) {
@@ -115,8 +115,8 @@ XPTI_CALLBACK_API void xptiTraceFinish(const char *stream_name) {
                               << std::endl;
                     typeToPrint = " ";
                 }
+                std::cout << std::endl;
             }
-
             delete syclCollectorObj;
             syclCollectorObj = nullptr;
         }
@@ -142,7 +142,7 @@ XPTI_CALLBACK_API void xptiTraceFinish(const char *stream_name) {
                           << std::endl;
                 typeToPrint = " ";
             }
-
+            std::cout << std::endl;
             delete piApiCollectorObj;
             piApiCollectorObj = nullptr;
         }
