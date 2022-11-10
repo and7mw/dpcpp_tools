@@ -80,7 +80,8 @@ XPTI_CALLBACK_API void xptiTraceFinish(const char *stream_name) {
     const size_t len = 10;
 
     if (headerPrinted != 1) {
-        std::cout << std::setw(len + 2) << "Time(%)"
+        std::cout << std::setw(len + 20) << "Type"
+                  << std::setw(len + 2) << "Time(%)"
                   << std::setw(len) << "Time(ms)"
                   << std::setw(len) << "Calls"
                   << std::setw(len) << "Avg(ms)"
@@ -95,23 +96,26 @@ XPTI_CALLBACK_API void xptiTraceFinish(const char *stream_name) {
             const auto& syclReport = syclCollectorObj->getProfileReport();
 
             for (const auto& deviceTable : syclReport) {
-                std::cout << "============== " << deviceTable.first << " ==============" << std::endl;
-
                 const auto& report = deviceTable.second;
 
-                for (const auto &entry : report) {
-                    std::cout << std::fixed << std::setprecision(2)
-                              << " " << entry.timePercent << "%"
-                              << " " << entry.totalTime
-                              << " " << entry.count
-                              << " " << entry.avg
-                              << " " << entry.min
-                              << " " << entry.max
-                              << " " << entry.name
+                std::string typeToPrint = " ";
+                for (size_t i = 0; i < report.size(); i++) {
+                    if (i == 0) {
+                        typeToPrint = deviceTable.first + ":";
+                    }
+                    std::cout << std::setw(len + 20) << typeToPrint
+                              << std::fixed << std::setprecision(2)
+                              << std::setw(len) << report[i].timePercent << "%"
+                              << std::setw(len) << report[i].totalTime
+                              << std::setw(len) << report[i].count
+                              << std::setw(len) << report[i].avg
+                              << std::setw(len) << report[i].min
+                              << std::setw(len) << report[i].max
+                              << std::setw(60) << report[i].name
                               << std::endl;
+                    typeToPrint = " ";
                 }
             }
-            
 
             delete syclCollectorObj;
             syclCollectorObj = nullptr;
@@ -121,17 +125,23 @@ XPTI_CALLBACK_API void xptiTraceFinish(const char *stream_name) {
         if (piApiCollectorObj != nullptr) {
             const auto& piApiReport = piApiCollectorObj->getProfileReport();
 
-            // for (const auto &entry : piApiReport) {
-            //     std::cout << std::fixed << std::setprecision(2)
-            //               << std::setw(len) << entry.timePercent << "%"
-            //               << std::setw(len) << entry.totalTime
-            //               << std::setw(len) << entry.count
-            //               << std::setw(len) << entry.avg
-            //               << std::setw(len) << entry.min
-            //               << std::setw(len) << entry.max
-            //               << std::setw(30) << entry.name
-            //               << std::endl;
-            // }
+            std::string typeToPrint = " ";
+            for (size_t i = 0; i < piApiReport.size(); i++) {
+                if (i == 0) {
+                    typeToPrint = "PI API calls:";
+                }
+                std::cout << std::setw(len + 20) << typeToPrint
+                          << std::fixed << std::setprecision(2)
+                          << std::setw(len) << piApiReport[i].timePercent << "%"
+                          << std::setw(len) << piApiReport[i].totalTime
+                          << std::setw(len) << piApiReport[i].count
+                          << std::setw(len) << piApiReport[i].avg
+                          << std::setw(len) << piApiReport[i].min
+                          << std::setw(len) << piApiReport[i].max
+                          << std::setw(60) << piApiReport[i].name
+                          << std::endl;
+                typeToPrint = " ";
+            }
 
             delete piApiCollectorObj;
             piApiCollectorObj = nullptr;

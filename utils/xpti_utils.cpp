@@ -25,6 +25,15 @@ namespace {
     };
 };
 
+std::string truncate(std::string Name) {
+  size_t Pos = Name.find_last_of(":");
+  if (Pos != std::string::npos) {
+    return Name.substr(Pos + 1);
+  } else {
+    return Name;
+  }
+}
+
 xptiUtils::taskInfo xptiUtils::extractTaskInfo(xpti::trace_event_data_t *event, const void *user_data) {
     const std::string nodeType = reinterpret_cast<const char *>(user_data);
     const xpti::metadata_t *metadata = xptiQueryMetadata(event);
@@ -38,6 +47,17 @@ xptiUtils::taskInfo xptiUtils::extractTaskInfo(xpti::trace_event_data_t *event, 
             if (std::find(attrs.begin(), attrs.end(), typeInfo) != attrs.end()) {
                 taskInfo[typeInfo] = xpti::readMetadata(item);
             }
+        }
+
+        if (nodeType == "command_group_node") {
+            std::string short_name = "<unknown>";
+
+            auto payload = xptiQueryPayload(event);
+            if (payload->name_sid() != xpti::invalid_id) {
+                short_name = truncate(payload->name);
+            }
+
+            taskInfo["short_kernel_name"] = short_name;
         }
     } else {
         for (const auto &item : *metadata) {

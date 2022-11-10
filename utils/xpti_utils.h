@@ -17,6 +17,9 @@ namespace xptiUtils {
         size_t min = std::numeric_limits<size_t>::max();
         size_t max = 0.0;
         std::string name;
+        // TODO: remove
+        std::string type;
+        size_t from, to;
     };
 
     using taskInfo = std::unordered_map<std::string, std::string>;
