@@ -7,16 +7,14 @@ int main(int argc, char* argv[]) {
     std::unique_ptr<sycl::device_selector> selector(new sycl::gpu_selector);
 
     try {
+        constexpr size_t size = 32;
+        int A_val = 1, B_val = 2;
+        std::vector<int> A(size, A_val), B(size, B_val), result(size);
+        {
         sycl::queue queue{*selector};
 
         std::cout << "Target device: "
               << queue.get_info<sycl::info::queue::device>().get_info<sycl::info::device::name>() << std::endl;
-
-        constexpr size_t size = 32;
-
-        int A_val = 1, B_val = 2;
-
-        std::vector<int> A(size, A_val), B(size, B_val), result(size);
 
         const size_t iter_num = 1;
         
@@ -37,6 +35,12 @@ int main(int argc, char* argv[]) {
 
             });
             queue.wait_and_throw();
+        }
+        }
+        for (const auto& r : result) {
+            if (r != (A_val - B_val)) {
+                throw std::runtime_error("Accuracy error!");
+            }
         }
     } catch(sycl::exception ex) {
         std::cout << "SYCL error: " << ex.what() << std::endl;
