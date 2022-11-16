@@ -26,46 +26,27 @@ namespace {
     };
 };
 
-std::string truncate(std::string Name) {
-  size_t Pos = Name.find_last_of(":");
-  if (Pos != std::string::npos) {
-    return Name.substr(Pos + 1);
-  } else {
-    return Name;
-  }
-}
+std::unordered_map<std::string, std::string>
+xptiUtils::extractMetadata(xpti::trace_event_data_t *event,const void *userData) {
+    const std::string nodeType = reinterpret_cast<const char *>(userData);
+    std::unordered_map<std::string, std::string> metadata;
 
-xptiUtils::taskInfo xptiUtils::extractTaskInfo(xpti::trace_event_data_t *event, const void *user_data) {
-    const std::string nodeType = reinterpret_cast<const char *>(user_data);
-    const xpti::metadata_t *metadata = xptiQueryMetadata(event);
-    std::unordered_map<std::string, std::string> taskInfo;
+    const xpti::metadata_t *xptiMetadata = xptiQueryMetadata(event);
 
-    taskInfo["node_type"] = nodeType;
+    metadata["node_type"] = nodeType;
     if (attrForTask.count(nodeType)) {
         const auto& attrs = attrForTask.at(nodeType);
-        for (const auto &item : *metadata) {
+        for (const auto &item : *xptiMetadata) {
             const std::string typeInfo = xptiLookupString(item.first);
             if (std::find(attrs.begin(), attrs.end(), typeInfo) != attrs.end()) {
-                taskInfo[typeInfo] = xpti::readMetadata(item);
+                metadata[typeInfo] = xpti::readMetadata(item);
             }
-        }
-
-        if (nodeType == xptiUtils::COMMAND_NODE) {
-            std::string short_name = "<unknown>";
-
-            auto payload = xptiQueryPayload(event);
-            if (payload->name_sid() != xpti::invalid_id) {
-                short_name = truncate(payload->name);
-            }
-
-            taskInfo["short_kernel_name"] = short_name;
         }
     } else {
-        for (const auto &item : *metadata) {
-            const std::string typeInfo = xptiLookupString(item.first);
-            taskInfo[typeInfo] = xpti::readMetadata(item);
+        for (const auto &item : *xptiMetadata) {
+            metadata[xptiLookupString(item.first)] = xpti::readMetadata(item);
         }
     }
 
-    return taskInfo;
+    return metadata;
 }

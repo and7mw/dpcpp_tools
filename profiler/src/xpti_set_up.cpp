@@ -174,7 +174,7 @@ XPTI_CALLBACK_API void taskCreateCallback(uint16_t trace_type,
                                           const void *user_data) {
     std::lock_guard<std::mutex> lock(mutex);
 
-    const auto& taskInfo = xptiUtils::extractTaskInfo(event, user_data);
+    const auto& taskInfo = xptiUtils::extractMetadata(event, user_data);
     syclCollectorObj->addTask(event->unique_id, taskInfo);
 }
 

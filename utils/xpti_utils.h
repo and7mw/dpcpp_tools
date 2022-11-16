@@ -22,6 +22,6 @@ namespace xptiUtils {
         size_t from, to;
     };
 
-    using taskInfo = std::unordered_map<std::string, std::string>;
-    taskInfo extractTaskInfo(xpti::trace_event_data_t *event, const void *user_data);
+    std::unordered_map<std::string, std::string> extractMetadata(xpti::trace_event_data_t *event,
+                                                                 const void *userData);
 };

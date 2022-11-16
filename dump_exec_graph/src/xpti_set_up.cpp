@@ -71,7 +71,7 @@ XPTI_CALLBACK_API void nodeCreateCallback(uint16_t trace_type,
                                           const void *user_data) {
     std::lock_guard<std::mutex> lock(mutex);
 
-    const auto& nodeInfo = xptiUtils::extractTaskInfo(event, user_data);
+    const auto& nodeInfo = xptiUtils::extractMetadata(event, user_data);
 
     execGraph->addNode(event->unique_id, nodeInfo);
 }
