@@ -26,6 +26,36 @@ namespace {
     };
 };
 
+void xptiUtils::addTask(const size_t id,
+                        const std::unordered_map<std::string, std::string> &metainfo,
+                        std::unordered_map<size_t, std::shared_ptr<xptiUtils::Task>> &tasks) {
+    if (tasks.count(id)) {
+        throw std::runtime_error("Can't add new task with id: " + std::to_string(id) + ". Already exist!");
+    }
+    tasks[id] = std::make_shared<Task>(metainfo);
+}
+
+void xptiUtils::addTaskStartExec(const size_t id, std::unordered_map<size_t, std::shared_ptr<xptiUtils::Task>> &tasks) {
+    if (!tasks.count(id)) {
+        throw std::runtime_error("Can't add start time for Task with id: " + std::to_string(id) +
+                                 ". Task missing in graph!");
+    }
+    tasks[id]->execDuration.push_back(xptiUtils::TimeRecord());
+    tasks[id]->execDuration.back().start = std::chrono::high_resolution_clock::now();
+}
+
+void xptiUtils::addTaskEndExec(const size_t id, std::unordered_map<size_t, std::shared_ptr<xptiUtils::Task>> &tasks) {
+    if (!tasks.count(id)) {
+        throw std::runtime_error("Can't add end time for task with id: " + std::to_string(id) +
+                                 ". Task missing in graph!");
+    }
+    if (tasks[id]->execDuration.empty()) {
+        throw std::runtime_error("Can't add end time for task with id: " + std::to_string(id) +
+                                 ". Start time for Task don't set!");
+    }
+    tasks[id]->execDuration.back().end = std::chrono::high_resolution_clock::now();
+}
+
 std::unordered_map<std::string, std::string>
 xptiUtils::extractMetadata(xpti::trace_event_data_t *event,const void *userData) {
     const std::string nodeType = reinterpret_cast<const char *>(userData);

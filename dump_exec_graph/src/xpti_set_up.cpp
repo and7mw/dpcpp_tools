@@ -73,7 +73,7 @@ XPTI_CALLBACK_API void nodeCreateCallback(uint16_t trace_type,
 
     const auto& nodeInfo = xptiUtils::extractMetadata(event, user_data);
 
-    execGraph->addNode(event->unique_id, nodeInfo);
+    xptiUtils::addTask(event->unique_id, nodeInfo, execGraph->tasks);
 }
 
 XPTI_CALLBACK_API void edgeCreateCallback(uint16_t trace_type,
@@ -99,9 +99,9 @@ XPTI_CALLBACK_API void taskCallback(uint16_t trace_type,
     std::lock_guard<std::mutex> lock(mutex);
 
     if (trace_type == static_cast<uint16_t>(xpti::trace_point_type_t::task_begin)) {
-        execGraph->addNodeStartExec(event->unique_id);
+        xptiUtils::addTaskStartExec(event->unique_id, execGraph->tasks);
     } else if (trace_type == static_cast<uint16_t>(xpti::trace_point_type_t::task_end)) {
-        execGraph->addNodeEndExec(event->unique_id);
+        xptiUtils::addTaskEndExec(event->unique_id, execGraph->tasks);
     } else {
         throw std::runtime_error("Can't handle trace point: " + std::to_string(trace_type) +
                                  ". Support only task_begin and task_end!");
