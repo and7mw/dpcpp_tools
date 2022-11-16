@@ -1,5 +1,6 @@
 #include "exec_graph.h"
 #include "xpti_utils.h"
+#include "xpti_types.h"
 #include "xpti/xpti_trace_framework.hpp"
 
 #include <iostream>
@@ -34,7 +35,7 @@ XPTI_CALLBACK_API void xptiTraceInit(unsigned int major_version,
                                      unsigned int minor_version,
                                      const char *version_str,
                                      const char *stream_name) {    
-    const std::string expectedStream("sycl");
+    const std::string expectedStream(xptiUtils::SYCL_STREAM);
 
     if (stream_name == expectedStream) {
         execGraph = std::make_unique<dumpExecGraphTool::ExecGraph>();

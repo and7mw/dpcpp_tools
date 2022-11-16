@@ -1,4 +1,5 @@
 #include "exec_graph.h"
+#include "xpti_types.h"
 
 #include <fstream>
 #include <chrono>
@@ -86,7 +87,7 @@ void dumpExecGraphTool::ExecGraph::serialize() const {
         const float percent = static_cast<float>(node.second->getTotalTime()) / total * 100.0f;
         dump << std::fixed << std::setprecision(2) << ", " << percent << " %";
         dump << "\"";
-        if (node.second->getMetainfo().at("node_type") != "command_group_node") {
+        if (node.second->getMetainfo().at("node_type") != xptiUtils::COMMAND_NODE) {
             dump << ", shape=box";
         }
         for (const auto& p : painter) {

@@ -2,6 +2,7 @@
 #include "sycl_collector.h"
 
 #include "xpti_utils.h"
+#include "xpti_types.h"
 #include "xpti/xpti_trace_framework.hpp"
 
 #include <iostream>
@@ -40,8 +41,8 @@ XPTI_CALLBACK_API void xptiTraceInit(unsigned int major_version,
                                      unsigned int minor_version,
                                      const char *version_str,
                                      const char *stream_name) {       
-    const std::string piApiStream("sycl.pi");
-    const std::string syclStream("sycl");
+    const std::string piApiStream(xptiUtils::SYCL_PI_STREAM);
+    const std::string syclStream(xptiUtils::SYCL_STREAM);
 
     if (stream_name == piApiStream) {
         piApiCollectorObj = new profilerTool::piApiCollector();
@@ -91,7 +92,7 @@ XPTI_CALLBACK_API void xptiTraceFinish(const char *stream_name) {
                   << std::endl << std::endl;;
         headerPrinted = 1;
     }
-    if (stream_name == std::string("sycl")) {
+    if (stream_name == std::string(xptiUtils::SYCL_STREAM)) {
         if (syclCollectorObj != nullptr) {
             const auto& syclReport = syclCollectorObj->getProfileReport();
 
@@ -121,7 +122,7 @@ XPTI_CALLBACK_API void xptiTraceFinish(const char *stream_name) {
             syclCollectorObj = nullptr;
         }
     }
-    if (stream_name == std::string("sycl.pi")) {
+    if (stream_name == std::string(xptiUtils::SYCL_PI_STREAM)) {
         if (piApiCollectorObj != nullptr) {
             const auto& piApiReport = piApiCollectorObj->getProfileReport();
 

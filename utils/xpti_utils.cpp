@@ -1,4 +1,5 @@
 #include "xpti_utils.h"
+#include "xpti_types.h"
 
 #include <vector>
 #include <string>
@@ -6,22 +7,22 @@
 
 namespace {
     const std::unordered_map<std::string, std::vector<std::string>> attrForTask = {
-        {"command_group_node", std::vector<std::string>{"sycl_device_type",
-                                                        "sycl_device",
-                                                        "sycl_device_name",
-                                                        "kernel_name"}},
+        {xptiUtils::COMMAND_NODE, std::vector<std::string>{xptiUtils::DEVICE_TYPE,
+                                                           xptiUtils::DEVICE_ID,
+                                                           xptiUtils::DEVICE_NAME,
+                                                           xptiUtils::KERNEL_NAME}},
         // TODO: fix copy_from / copy_to
-        {"memory_transfer_node", std::vector<std::string>{"copy_from_id",
-                                                          "sycl_device",
-                                                          "copy_to_id",
-                                                          "memory_object"}},
-        {"memory_allocation_node", std::vector<std::string>{"memory_object",
-                                                            "sycl_device_name",
-                                                            "sycl_device",
-                                                            "sycl_device_type"}},
-        {"memory_deallocation_node", std::vector<std::string>{"sycl_device_name",
-                                                              "sycl_device",
-                                                              "sycl_device_type"}}
+        {xptiUtils::MEM_TRANSF_NODE, std::vector<std::string>{xptiUtils::COPY_FROM,
+                                                             xptiUtils::DEVICE_ID,
+                                                             xptiUtils::COPY_TO,
+                                                             xptiUtils::MEM_OBJ}},
+        {xptiUtils::MEM_ALLOC_NODE, std::vector<std::string>{xptiUtils::MEM_OBJ,
+                                                             xptiUtils::DEVICE_NAME,
+                                                             xptiUtils::DEVICE_ID,
+                                                             xptiUtils::DEVICE_TYPE}},
+        {xptiUtils::MEM_DEALLOC_NODE, std::vector<std::string>{xptiUtils::DEVICE_NAME,
+                                                               xptiUtils::DEVICE_ID,
+                                                               xptiUtils::DEVICE_TYPE}}
     };
 };
 
@@ -49,7 +50,7 @@ xptiUtils::taskInfo xptiUtils::extractTaskInfo(xpti::trace_event_data_t *event, 
             }
         }
 
-        if (nodeType == "command_group_node") {
+        if (nodeType == xptiUtils::COMMAND_NODE) {
             std::string short_name = "<unknown>";
 
             auto payload = xptiQueryPayload(event);
