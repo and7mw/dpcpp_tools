@@ -10,12 +10,10 @@ class Edge final {
 
     size_t number;
     size_t parent, child;
-    std::string name;
+    std::string origName, name;
 
   public:
-    Edge(size_t parent, size_t child, const std::string& name) : parent(parent), child(child), name(name) {
-        number = counter++;
-    }
+    Edge(size_t parent, size_t child, const std::string& origName);
 
     size_t getParent() const { return parent; }
     size_t getChild() const { return child; }

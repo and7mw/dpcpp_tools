@@ -1,44 +1,18 @@
 #include "exec_graph.h"
+#include "xpti_types.h"
 
 #include <fstream>
 #include <chrono>
 #include <sstream>
 #include <iomanip>
 #include <iostream>
-
-void dumpExecGraphTool::ExecGraph::addNode(const size_t id,
-                                           const std::unordered_map<std::string, std::string> &metainfo) {
-    if (nodes.count(id)) {
-        throw std::runtime_error("Can't add node with id: " + std::to_string(id) + ". Already exist in graph!");
-    }
-    nodes[id] = std::make_shared<Node>(metainfo);
-}
+#include <algorithm>
+#include <cstdlib>
 
 void dumpExecGraphTool::ExecGraph::addEdge(const size_t parent,
                                            const size_t child,
                                            const std::string& name) {
     edges.push_back(std::make_shared<Edge>(parent, child, name));
-}
-
-void dumpExecGraphTool::ExecGraph::addNodeStartExec(const size_t id) {
-    if (!nodes.count(id)) {
-        throw std::runtime_error("Can't add start time for node with id: " + std::to_string(id) +
-                                 ". Node missing in graph!");
-    }
-    nodes[id]->execDuration.push_back(Node::DurationEntry());
-    nodes[id]->execDuration.back().start = std::chrono::high_resolution_clock::now();
-}
-
-void dumpExecGraphTool::ExecGraph::addNodeEndExec(const size_t id) {
-    if (!nodes.count(id)) {
-        throw std::runtime_error("Can't add end time for node with id: " + std::to_string(id) +
-                                 ". Node missing in graph!");
-    }
-    if (nodes[id]->execDuration.empty()) {
-        throw std::runtime_error("Can't add end time for node with id: " + std::to_string(id) +
-                                 ". Start time for node don't set!");
-    }
-    nodes[id]->execDuration.back().end = std::chrono::high_resolution_clock::now();
 }
 
 void dumpExecGraphTool::ExecGraph::serialize() const {
@@ -49,65 +23,88 @@ void dumpExecGraphTool::ExecGraph::serialize() const {
         {0.0f, "green"},
     };
 
-    std::ofstream dump;
-    // TODO: make path os agnostic
-    dump.open("/home/maxim/master_science_work/dump.dot");
-    if (dump.fail()) {
-        throw std::runtime_error("Opening file for dumping failed!");
-    }
+    auto statMap = xptiUtils::getPerTaskStatistic(tasks);
+    std::vector<xptiUtils::profileEntry> statistics;
+    statistics.reserve(statMap.size());
 
     uint64_t total = 0;
-    for (const auto& node : nodes) {
-        total += node.second->getTotalTime();
+    for (const auto& task : statMap) {
+        total += task.second.totalTime;
+        statistics.emplace_back(task.second);
     }
 
-    // TODO: make metadata serialization more pretty
-    auto nodeSerialize = [](const std::shared_ptr<Node> node) {
-        const auto& metadata = node->getMetainfo();
-        std::string result;
+    std::sort(statistics.begin(), statistics.end(), [](const xptiUtils::profileEntry& lhs,
+                                                       const xptiUtils::profileEntry& rhs) {
+        return lhs.order.front() < rhs.order.front();
+    });
 
-        for (const auto& mi : metadata) {
-            result += mi.first + " : " + mi.second + "\n";
-        }
-
-        const double avgTime = static_cast<double>(node->getTotalTime()) / node->execDuration.size();
-        std::stringstream stream;
-        stream << "Avg time: " << std::fixed << std::setprecision(2) << avgTime
-               << " ms, launched " << std::to_string(node->execDuration.size()) << " times";
-        result += stream.str();
-
-        return result;
-    };
-
-    dump << "digraph graphname {" << std::endl;
-    for (const auto& node : nodes) {
-        dump << "N" << node.first;
-        dump << " [label=\"" << nodeSerialize(node.second);
-        const float percent = static_cast<float>(node.second->getTotalTime()) / total * 100.0f;
-        dump << std::fixed << std::setprecision(2) << ", " << percent << " %";
-        dump << "\"";
-        if (node.second->getMetainfo().at("node_type") != "command_group_node") {
-            dump << ", shape=box";
+    // generate first part of graph
+    std::stringstream firstPartGraph;
+    firstPartGraph << "digraph graphname {" << std::endl;
+    for (const auto& task : statistics) {
+        firstPartGraph << "N" << task.id;
+        firstPartGraph << " [label=\"" << task.name << "\n" << task.metadata;
+        firstPartGraph << "Avg time: " << std::fixed << std::setprecision(2)
+                       << static_cast<double>(task.totalTime) / task.count
+                       << " ms, launched " << task.count << " times";
+        const float percent = static_cast<double>(task.totalTime) / total * 100.0f;
+        firstPartGraph << std::fixed << std::setprecision(2) << ", " << percent << " %";
+        firstPartGraph << "\"";
+        if (task.type != xptiUtils::COMMAND_NODE) {
+            firstPartGraph << ", shape=box";
         }
         for (const auto& p : painter) {
             if (percent >= p.first) {
-                dump << ", style=filled, fillcolor=" << p.second;
+                firstPartGraph << ", style=filled, fillcolor=" << p.second;
                 break;
             }
         }
-        dump << "];" << std::endl;
+        firstPartGraph << "];" << std::endl;
     }
 
+    // open files for dump
+    // TODO: restore
+    // char currDirPath[] = "./";
+    char currDirPath[] = "/home/maxim/master_science_work/";
+    char* dumpPath = std::getenv(xptiUtils::GRAPH_DUMP_PATH);
+    if (dumpPath == nullptr) {
+        dumpPath = currDirPath;
+    }
+    std::ofstream dumpGraphUniq, dumpGraphMult;
+    std::string dumpGraphUniqName("graph_uniq_edges.dot"), dumpGraphMultName("graph_mult_edges.dot");
+    dumpGraphUniq.open(dumpPath + dumpGraphUniqName);
+    dumpGraphMult.open(dumpPath + dumpGraphMultName);
+    if (dumpGraphUniq.fail()) {
+        throw std::runtime_error("Can't open " + dumpGraphUniqName);
+    }
+    if (dumpGraphMult.fail()) {
+        throw std::runtime_error("Can't open " + dumpGraphMultName);
+    }
+
+    // generate second part of graph
+    // unique edges
+    auto uniqueEdges = edges;
+    auto lastEdge = std::unique(uniqueEdges.begin(), uniqueEdges.end(),
+                                [](const std::shared_ptr<Edge>& lhs, const std::shared_ptr<Edge>& rhs) {
+                                    return lhs->getChild() == rhs->getChild() &&
+                                            lhs->getParent() == rhs->getParent();
+                                });
+    uniqueEdges.erase(lastEdge, uniqueEdges.end());
+    dumpGraphUniq << firstPartGraph.str();
+    for (const auto& edge : uniqueEdges) {
+        dumpGraphUniq << "N" << edge->getParent() << " -> N" << edge->getChild()
+                      << " [label=\"" << edge->getName() << "\"];" << std::endl;
+    }
+    dumpGraphUniq << "}" << std::endl;
+    // mult edges
+    dumpGraphMult << firstPartGraph.str();
     for (const auto& edge : edges) {
-        dump << "N" << edge->getParent() << " -> N" << edge->getChild()
-        << " [label=\"" << edge->getName() << "_" << edge->getNumber() << "\"];" << std::endl;
+        dumpGraphMult << "N" << edge->getParent() << " -> N" << edge->getChild()
+                      << " [label=\"" << edge->getName() << "\"];" << std::endl;
     }
+    dumpGraphMult << "}" << std::endl;
 
-    dump << "}" << std::endl;
-
-    dump.close();
-}
-
-dumpExecGraphTool::ExecGraph::~ExecGraph() {
-    serialize();
+    // close files
+    dumpGraphUniq.close();
+    dumpGraphMult.close();
 }

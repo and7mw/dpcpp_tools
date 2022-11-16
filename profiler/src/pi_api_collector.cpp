@@ -39,8 +39,9 @@ std::vector<xptiUtils::profileEntry> profilerTool::piApiCollector::getProfileRep
     table.reserve(records.size());
     size_t totalTime = 0;
     for (const auto& func : records) {
-        table.push_back(xptiUtils::profileEntry(func.first));
+        table.push_back(xptiUtils::profileEntry());
         auto& currEntry = table.back();
+        currEntry.name = func.first;
         size_t totalFuncTime = 0;
         for (const auto& entry : func.second) {
             currEntry.count++;
