@@ -10,7 +10,6 @@
 namespace dumpExecGraphTool {
 
 class ExecGraph final {
-    // std::unordered_map<size_t, std::shared_ptr<xptiUtils::Task>> tasks;
     std::vector<std::shared_ptr<Edge>> edges;
 
   public:

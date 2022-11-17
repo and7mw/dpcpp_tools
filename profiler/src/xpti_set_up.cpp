@@ -92,36 +92,36 @@ XPTI_CALLBACK_API void xptiTraceFinish(const char *stream_name) {
                   << std::endl << std::endl;;
         headerPrinted = 1;
     }
-    if (stream_name == std::string(xptiUtils::SYCL_STREAM)) {
-        if (syclCollectorObj != nullptr) {
-            const auto& syclReport = syclCollectorObj->getProfileReport();
+    // if (stream_name == std::string(xptiUtils::SYCL_STREAM)) {
+    //     if (syclCollectorObj != nullptr) {
+    //         const auto& syclReport = syclCollectorObj->getProfileReport();
 
-            for (const auto& deviceTable : syclReport) {
-                const auto& report = deviceTable.second;
+    //         for (const auto& deviceTable : syclReport) {
+    //             const auto& report = deviceTable.second;
 
-                std::string typeToPrint = " ";
-                for (size_t i = 0; i < report.size(); i++) {
-                    if (i == 0) {
-                        typeToPrint = deviceTable.first + ":";
-                    }
-                    std::cout << std::setw(len + 20) << typeToPrint
-                              << std::fixed << std::setprecision(2)
-                              << std::setw(len) << report[i].timePercent << "%"
-                              << std::setw(len) << report[i].totalTime
-                              << std::setw(len) << report[i].count
-                              << std::setw(len) << report[i].avg
-                              << std::setw(len) << report[i].min
-                              << std::setw(len) << report[i].max
-                              << std::setw(60) << report[i].name
-                              << std::endl;
-                    typeToPrint = " ";
-                }
-                std::cout << std::endl;
-            }
-            delete syclCollectorObj;
-            syclCollectorObj = nullptr;
-        }
-    }
+    //             std::string typeToPrint = " ";
+    //             for (size_t i = 0; i < report.size(); i++) {
+    //                 if (i == 0) {
+    //                     typeToPrint = deviceTable.first + ":";
+    //                 }
+    //                 std::cout << std::setw(len + 20) << typeToPrint
+    //                           << std::fixed << std::setprecision(2)
+    //                           << std::setw(len) << report[i].timePercent << "%"
+    //                           << std::setw(len) << report[i].totalTime
+    //                           << std::setw(len) << report[i].count
+    //                           << std::setw(len) << report[i].avg
+    //                           << std::setw(len) << report[i].min
+    //                           << std::setw(len) << report[i].max
+    //                           << std::setw(60) << report[i].name
+    //                           << std::endl;
+    //                 typeToPrint = " ";
+    //             }
+    //             std::cout << std::endl;
+    //         }
+    //         delete syclCollectorObj;
+    //         syclCollectorObj = nullptr;
+    //     }
+    // }
     if (stream_name == std::string(xptiUtils::SYCL_PI_STREAM)) {
         if (piApiCollectorObj != nullptr) {
             const auto& piApiReport = piApiCollectorObj->getProfileReport();

@@ -19,4 +19,7 @@ namespace xptiUtils {
     inline const char* COPY_FROM = "copy_from_id";
     inline const char* COPY_TO = "copy_to_id";
     inline const char* MEM_OBJ = "memory_object";
+
+    // aux
+    inline const char* NODE_TYPE = "node_type";
 };

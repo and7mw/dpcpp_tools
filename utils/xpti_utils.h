@@ -11,7 +11,8 @@
 namespace xptiUtils {
     struct profileEntry {
         profileEntry() = default;
-        explicit profileEntry(const std::string& name) : name(name) {}
+
+        // metrics
         float timePercent = 0.0f;
         size_t totalTime = 0;
         size_t count = 0;
@@ -19,9 +20,12 @@ namespace xptiUtils {
         size_t min = std::numeric_limits<size_t>::max();
         size_t max = 0.0;
         std::string name;
-        // TODO: remove
+
+        // aux info
+        size_t id;
         std::string type;
-        size_t from, to;
+        std::string deviceName;
+        std::string metadata;
     };
 };
 
@@ -58,4 +62,7 @@ namespace xptiUtils {
 namespace xptiUtils {
     std::unordered_map<std::string, std::string> extractMetadata(xpti::trace_event_data_t *event,
                                                                  const void *userData);
+    
+    using perTaskStatistic = std::unordered_map<size_t, xptiUtils::profileEntry>;
+    perTaskStatistic getPerTaskStatistic(const std::unordered_map<size_t, std::shared_ptr<xptiUtils::Task>> tasks);
 };
