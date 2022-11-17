@@ -6,6 +6,8 @@
 #include <sstream>
 #include <iomanip>
 #include <iostream>
+#include <algorithm>
+#include <cstdlib>
 
 void dumpExecGraphTool::ExecGraph::addEdge(const size_t parent,
                                            const size_t child,
@@ -14,70 +16,85 @@ void dumpExecGraphTool::ExecGraph::addEdge(const size_t parent,
 }
 
 void dumpExecGraphTool::ExecGraph::serialize() const {
-    // const std::vector<std::pair<float, std::string>> painter{
-    //     {50.0f, "red"},
-    //     {20.0f, "orange"},
-    //     {10.0f, "yellow"},
-    //     {0.0f, "green"},
-    // };
+    const std::vector<std::pair<float, std::string>> painter{
+        {50.0f, "red"},
+        {20.0f, "orange"},
+        {10.0f, "yellow"},
+        {0.0f, "green"},
+    };
 
-    // std::ofstream dump;
-    // // TODO: make path os agnostic
-    // dump.open("/home/maxim/master_science_work/dump.dot");
-    // if (dump.fail()) {
-    //     throw std::runtime_error("Opening file for dumping failed!");
-    // }
+    const auto& statistics = xptiUtils::getPerTaskStatistic(tasks);
 
-    // uint64_t total = 0;
-    // for (const auto& Task : tasks) {
-    //     total += Task.second->getTotalTime();
-    // }
+    uint64_t total = 0;
+    for (const auto& task : statistics) {
+        total += task.second.totalTime;
+    }
 
-    // // TODO: make metadata serialization more pretty
-    // auto taskserialize = [](const std::shared_ptr<xptiUtils::Task> Task) {
-    //     const auto& metadata = Task->getMetainfo();
-    //     std::string result;
+    // generate first part of graph
+    std::stringstream firstPartGraph;
+    firstPartGraph << "digraph graphname {" << std::endl;
+    for (const auto& task : statistics) {
+        firstPartGraph << "N" << task.first;
+        firstPartGraph << " [label=\"" << task.second.name << "\n" << task.second.metadata;
+        firstPartGraph << "Avg time: " << std::fixed << std::setprecision(2)
+             << static_cast<double>(task.second.totalTime) / task.second.count
+             << " ms, launched " << task.second.count << " times";
+        const float percent = static_cast<double>(task.second.totalTime) / total * 100.0f;
+        firstPartGraph << std::fixed << std::setprecision(2) << ", " << percent << " %";
+        firstPartGraph << "\"";
+        if (task.second.type != xptiUtils::COMMAND_NODE) {
+            firstPartGraph << ", shape=box";
+        }
+        for (const auto& p : painter) {
+            if (percent >= p.first) {
+                firstPartGraph << ", style=filled, fillcolor=" << p.second;
+                break;
+            }
+        }
+        firstPartGraph << "];" << std::endl;
+    }
 
-    //     for (const auto& mi : metadata) {
-    //         result += mi.first + " : " + mi.second + "\n";
-    //     }
+    // open files for dump
+    char currDirPath[] = "./";
+    char* dumpPath = std::getenv(xptiUtils::GRAPH_DUMP_PATH);
+    if (dumpPath == nullptr) {
+        dumpPath = currDirPath;
+    }
+    std::ofstream dumpGraphUniq, dumpGraphMult;
+    std::string dumpGraphUniqName("graph_uniq_edges.dot"), dumpGraphMultName("graph_mult_edges.dot");
+    dumpGraphUniq.open(dumpPath + dumpGraphUniqName);
+    dumpGraphMult.open(dumpPath + dumpGraphMultName);
+    if (dumpGraphUniq.fail()) {
+        throw std::runtime_error("Can't open " + dumpGraphUniqName);
+    }
+    if (dumpGraphMult.fail()) {
+        throw std::runtime_error("Can't open " + dumpGraphMultName);
+    }
 
-    //     const double avgTime = static_cast<double>(Task->getTotalTime()) / Task->execDuration.size();
-    //     std::stringstream stream;
-    //     stream << "Avg time: " << std::fixed << std::setprecision(2) << avgTime
-    //            << " ms, launched " << std::to_string(Task->execDuration.size()) << " times";
-    //     result += stream.str();
-
-    //     return result;
-    // };
-
-    // dump << "digraph graphname {" << std::endl;
-    // for (const auto& Task : tasks) {
-    //     dump << "N" << Task.first;
-    //     dump << " [label=\"" << taskserialize(Task.second);
-    //     const float percent = static_cast<float>(Task.second->getTotalTime()) / total * 100.0f;
-    //     dump << std::fixed << std::setprecision(2) << ", " << percent << " %";
-    //     dump << "\"";
-    //     if (Task.second->getMetainfo().at("Task_type") != xptiUtils::COMMAND_NODE) {
-    //         dump << ", shape=box";
-    //     }
-    //     for (const auto& p : painter) {
-    //         if (percent >= p.first) {
-    //             dump << ", style=filled, fillcolor=" << p.second;
-    //             break;
-    //         }
-    //     }
-    //     dump << "];" << std::endl;
-    // }
-
-    // for (const auto& edge : edges) {
-    //     dump << "N" << edge->getParent() << " -> N" << edge->getChild()
-    //     << " [label=\"" << edge->getName() << "_" << edge->getNumber() << "\"];" << std::endl;
-    // }
-
-    // dump << "}" << std::endl;
-
-    // dump.close();
+    // generate second part of graph
+    // unique edges
+    auto uniqueEdges = edges;
+    auto lastEdge = std::unique(uniqueEdges.begin(), uniqueEdges.end(),
+                                [](const std::shared_ptr<Edge>& lhs, const std::shared_ptr<Edge>& rhs) {
+                                    return lhs->getChild() == rhs->getChild() &&
+                                            lhs->getParent() == rhs->getParent();
+                                });
+    uniqueEdges.erase(lastEdge, uniqueEdges.end());
+    dumpGraphUniq << firstPartGraph.str();
+    for (const auto& edge : uniqueEdges) {
+        dumpGraphUniq << "N" << edge->getParent() << " -> N" << edge->getChild() << std::endl;
+    }
+    dumpGraphUniq << "}" << std::endl;
+    // mult edges
+    dumpGraphMult << firstPartGraph.str();
+    for (const auto& edge : edges) {
+        dumpGraphMult << "N" << edge->getParent() << " -> N" << edge->getChild() << std::endl;
+    }
+    dumpGraphMult << "}" << std::endl;
+    
+    // close files
+    dumpGraphUniq.close();
+    dumpGraphMult.close();
 }
 
 dumpExecGraphTool::ExecGraph::~ExecGraph() {

@@ -20,6 +20,9 @@ namespace xptiUtils {
     inline const char* COPY_TO = "copy_to_id";
     inline const char* MEM_OBJ = "memory_object";
 
+    // env var
+    inline const char* GRAPH_DUMP_PATH = "GRAPH_DUMP_PATH";
+
     // aux
     inline const char* NODE_TYPE = "node_type";
 };
