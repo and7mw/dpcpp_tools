@@ -126,48 +126,48 @@ XPTI_CALLBACK_API void xptiTraceInit(unsigned int major_version,
     // registered stream ID
     GStreamID = xptiRegisterStream(stream_name);
     // Register our lone callback to all pre-defined trace point types
-    xptiRegisterCallback(GStreamID,
-                         (uint16_t)xpti::trace_point_type_t::graph_create,
-                         tpCallback);
+    // xptiRegisterCallback(GStreamID,
+    //                      (uint16_t)xpti::trace_point_type_t::graph_create,
+    //                      tpCallback);
     xptiRegisterCallback(
         GStreamID, (uint16_t)xpti::trace_point_type_t::node_create, tpCallback);
-    xptiRegisterCallback(
-        GStreamID, (uint16_t)xpti::trace_point_type_t::edge_create, tpCallback);
-    xptiRegisterCallback(GStreamID,
-                         (uint16_t)xpti::trace_point_type_t::region_begin,
-                         tpCallback);
-    xptiRegisterCallback(
-        GStreamID, (uint16_t)xpti::trace_point_type_t::region_end, tpCallback);
-    xptiRegisterCallback(
-        GStreamID, (uint16_t)xpti::trace_point_type_t::task_begin, tpCallback);
-    xptiRegisterCallback(
-        GStreamID, (uint16_t)xpti::trace_point_type_t::task_end, tpCallback);
-    xptiRegisterCallback(GStreamID,
-                         (uint16_t)xpti::trace_point_type_t::barrier_begin,
-                         tpCallback);
-    xptiRegisterCallback(
-        GStreamID, (uint16_t)xpti::trace_point_type_t::barrier_end, tpCallback);
-    xptiRegisterCallback(
-        GStreamID, (uint16_t)xpti::trace_point_type_t::lock_begin, tpCallback);
-    xptiRegisterCallback(
-        GStreamID, (uint16_t)xpti::trace_point_type_t::lock_end, tpCallback);
-    xptiRegisterCallback(GStreamID,
-                         (uint16_t)xpti::trace_point_type_t::transfer_begin,
-                         tpCallback);
-    xptiRegisterCallback(GStreamID,
-                         (uint16_t)xpti::trace_point_type_t::transfer_end,
-                         tpCallback);
-    xptiRegisterCallback(GStreamID,
-                         (uint16_t)xpti::trace_point_type_t::thread_begin,
-                         tpCallback);
-    xptiRegisterCallback(
-        GStreamID, (uint16_t)xpti::trace_point_type_t::thread_end, tpCallback);
-    xptiRegisterCallback(
-        GStreamID, (uint16_t)xpti::trace_point_type_t::wait_begin, tpCallback);
-    xptiRegisterCallback(
-        GStreamID, (uint16_t)xpti::trace_point_type_t::wait_end, tpCallback);
-    xptiRegisterCallback(GStreamID, (uint16_t)xpti::trace_point_type_t::signal,
-                         tpCallback);
+    // xptiRegisterCallback(
+    //     GStreamID, (uint16_t)xpti::trace_point_type_t::edge_create, tpCallback);
+    // xptiRegisterCallback(GStreamID,
+    //                      (uint16_t)xpti::trace_point_type_t::region_begin,
+    //                      tpCallback);
+    // xptiRegisterCallback(
+    //     GStreamID, (uint16_t)xpti::trace_point_type_t::region_end, tpCallback);
+    // xptiRegisterCallback(
+    //     GStreamID, (uint16_t)xpti::trace_point_type_t::task_begin, tpCallback);
+    // xptiRegisterCallback(
+    //     GStreamID, (uint16_t)xpti::trace_point_type_t::task_end, tpCallback);
+    // xptiRegisterCallback(GStreamID,
+    //                      (uint16_t)xpti::trace_point_type_t::barrier_begin,
+    //                      tpCallback);
+    // xptiRegisterCallback(
+    //     GStreamID, (uint16_t)xpti::trace_point_type_t::barrier_end, tpCallback);
+    // xptiRegisterCallback(
+    //     GStreamID, (uint16_t)xpti::trace_point_type_t::lock_begin, tpCallback);
+    // xptiRegisterCallback(
+    //     GStreamID, (uint16_t)xpti::trace_point_type_t::lock_end, tpCallback);
+    // xptiRegisterCallback(GStreamID,
+    //                      (uint16_t)xpti::trace_point_type_t::transfer_begin,
+    //                      tpCallback);
+    // xptiRegisterCallback(GStreamID,
+    //                      (uint16_t)xpti::trace_point_type_t::transfer_end,
+    //                      tpCallback);
+    // xptiRegisterCallback(GStreamID,
+    //                      (uint16_t)xpti::trace_point_type_t::thread_begin,
+    //                      tpCallback);
+    // xptiRegisterCallback(
+    //     GStreamID, (uint16_t)xpti::trace_point_type_t::thread_end, tpCallback);
+    // xptiRegisterCallback(
+    //     GStreamID, (uint16_t)xpti::trace_point_type_t::wait_begin, tpCallback);
+    // xptiRegisterCallback(
+    //     GStreamID, (uint16_t)xpti::trace_point_type_t::wait_end, tpCallback);
+    // xptiRegisterCallback(GStreamID, (uint16_t)xpti::trace_point_type_t::signal,
+    //                      tpCallback);
     printf("Registered all callbacks\n");
   } else {
     // handle the case when a bad stream name has been provided
@@ -209,23 +209,30 @@ XPTI_CALLBACK_API void tpCallback(uint16_t TraceType,
   // Lock while we print information
   std::lock_guard<std::mutex> Lock(GIOMutex);
   // Print the record information
+  std::string evName;
   if (UserData != nullptr) {
-    std::cout << std::string(reinterpret_cast<const char *>(UserData)) << std::endl;
+    evName = reinterpret_cast<const char *>(UserData);
+    std::cout << evName << std::endl;
   }
-  printf("%-25lu: name=%-35s cpu=%3d event_id=%10lu\n", Time, Name.c_str(), CPU,
-         ID);
+  // printf("%-25lu: name=%-35s cpu=%3d event_id=%10lu\n", Time, Name.c_str(), CPU,
+  //        ID);
   // Go through all available meta-data for an event and print it out
-  xpti::metadata_t *Metadata = xptiQueryMetadata(Event);
-  for (const auto &Item : *Metadata) {
-    std::cout << "     ";
-    std::cout << xptiLookupString(Item.first) << " : ";
-    std::cout << xpti::readMetadata(Item) << "\n";
+  if (evName == "memory_transfer_node") {
+    xpti::metadata_t *Metadata = xptiQueryMetadata(Event);
+    for (const auto &Item : *Metadata) {
+      const auto name = std::string(xptiLookupString(Item.first));
+      if (name == "copy_from_id" || name == "copy_to_id") {
+        std::cout << "     ";
+        std::cout << name << " : ";
+        std::cout << xpti::readMetadata(Item) << "\n";
+      }
+    }
   }
 
-  if (Payload->source_file_sid() != xpti::invalid_id && Payload->line_no > 0) {
-    printf("---[Source file:line no] %s:%d\n", Payload->source_file,
-           Payload->line_no);
-  }
+  // if (Payload->source_file_sid() != xpti::invalid_id && Payload->line_no > 0) {
+  //   printf("---[Source file:line no] %s:%d\n", Payload->source_file,
+  //          Payload->line_no);
+  // }
 }
 
 #if (defined(_WIN32) || defined(_WIN64))
