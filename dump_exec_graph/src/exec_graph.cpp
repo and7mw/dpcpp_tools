@@ -23,26 +23,34 @@ void dumpExecGraphTool::ExecGraph::serialize() const {
         {0.0f, "green"},
     };
 
-    const auto& statistics = xptiUtils::getPerTaskStatistic(tasks);
+    auto statMap = xptiUtils::getPerTaskStatistic(tasks);
+    std::vector<xptiUtils::profileEntry> statistics;
+    statistics.reserve(statMap.size());
 
     uint64_t total = 0;
-    for (const auto& task : statistics) {
+    for (const auto& task : statMap) {
         total += task.second.totalTime;
+        statistics.emplace_back(task.second);
     }
+
+    std::sort(statistics.begin(), statistics.end(), [](const xptiUtils::profileEntry& lhs,
+                                                       const xptiUtils::profileEntry& rhs) {
+        return lhs.order.front() < rhs.order.front();
+    });
 
     // generate first part of graph
     std::stringstream firstPartGraph;
     firstPartGraph << "digraph graphname {" << std::endl;
     for (const auto& task : statistics) {
-        firstPartGraph << "N" << task.first;
-        firstPartGraph << " [label=\"" << task.second.name << "\n" << task.second.metadata;
+        firstPartGraph << "N" << task.id;
+        firstPartGraph << " [label=\"" << task.name << "\n" << task.metadata;
         firstPartGraph << "Avg time: " << std::fixed << std::setprecision(2)
-             << static_cast<double>(task.second.totalTime) / task.second.count
-             << " ms, launched " << task.second.count << " times";
-        const float percent = static_cast<double>(task.second.totalTime) / total * 100.0f;
+                       << static_cast<double>(task.totalTime) / task.count
+                       << " ms, launched " << task.count << " times";
+        const float percent = static_cast<double>(task.totalTime) / total * 100.0f;
         firstPartGraph << std::fixed << std::setprecision(2) << ", " << percent << " %";
         firstPartGraph << "\"";
-        if (task.second.type != xptiUtils::COMMAND_NODE) {
+        if (task.type != xptiUtils::COMMAND_NODE) {
             firstPartGraph << ", shape=box";
         }
         for (const auto& p : painter) {

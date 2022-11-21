@@ -13,11 +13,12 @@ class ExecGraph final {
     std::vector<std::shared_ptr<Edge>> edges;
 
   public:
+    ExecGraph() = default;
+
     std::unordered_map<size_t, std::shared_ptr<xptiUtils::Task>> tasks;
 
     void addEdge(const size_t parent, const size_t child, const std::string& name);
     void serialize() const;
-    ~ExecGraph();
 };
 
 };

@@ -26,6 +26,7 @@ namespace xptiUtils {
         std::string type;
         std::string deviceName;
         std::string metadata;
+        std::vector<size_t> order;
     };
 };
 
@@ -35,6 +36,11 @@ namespace xptiUtils {
     };
 
     struct Task final {
+      private:
+        static size_t counter;
+        std::vector<size_t> order;
+
+      public:
         std::vector<TimeRecord> execDuration;
 
         Task(const std::unordered_map<std::string, std::string> &metainfo) : metainfo(metainfo) {}
@@ -47,6 +53,9 @@ namespace xptiUtils {
             }
             return total;
         }
+
+        void incExecOrder() { order.emplace_back(counter++); }
+        const std::vector<size_t>& getExecOrder() const { return order; }
 
       private:
         std::unordered_map<std::string, std::string> metainfo;

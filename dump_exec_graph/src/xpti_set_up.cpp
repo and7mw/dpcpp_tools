@@ -9,7 +9,7 @@
 #include <unordered_map>
 #include <algorithm>
 
-std::unique_ptr<dumpExecGraphTool::ExecGraph> execGraph = nullptr;
+dumpExecGraphTool::ExecGraph* execGraph = nullptr;
 std::mutex mutex;
 
 XPTI_CALLBACK_API void nodeCreateCallback(uint16_t trace_type,
@@ -35,10 +35,8 @@ XPTI_CALLBACK_API void xptiTraceInit(unsigned int major_version,
                                      unsigned int minor_version,
                                      const char *version_str,
                                      const char *stream_name) {    
-    const std::string expectedStream(xptiUtils::SYCL_STREAM);
-
-    if (stream_name == expectedStream) {
-        execGraph = std::make_unique<dumpExecGraphTool::ExecGraph>();
+    if (stream_name == std::string(xptiUtils::SYCL_STREAM)) {
+        execGraph = new dumpExecGraphTool::ExecGraph>();
 
         const auto streamId = xptiRegisterStream(stream_name);
 
@@ -62,7 +60,12 @@ XPTI_CALLBACK_API void xptiTraceInit(unsigned int major_version,
     }
 }
 
-XPTI_CALLBACK_API void xptiTraceFinish(const char *stream_name) {}
+XPTI_CALLBACK_API void xptiTraceFinish(const char *stream_name) {
+    if (stream_name == std::string(xptiUtils::SYCL_STREAM)) {
+        execGraph->serialize();
+        delete execGraph;
+    }
+}
 
 XPTI_CALLBACK_API void nodeCreateCallback(uint16_t trace_type,
                                           xpti::trace_event_data_t *parent,

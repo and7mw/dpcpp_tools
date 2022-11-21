@@ -5,6 +5,8 @@
 #include <string>
 #include <algorithm>
 
+size_t xptiUtils::Task::counter = 0;
+
 namespace {
     const std::unordered_map<std::string, std::vector<std::string>> attrForTask = {
         {xptiUtils::COMMAND_NODE, std::vector<std::string>{xptiUtils::DEVICE_TYPE,
@@ -42,6 +44,7 @@ void xptiUtils::addTaskStartExec(const size_t id, std::unordered_map<size_t, std
     }
     tasks[id]->execDuration.push_back(xptiUtils::TimeRecord());
     tasks[id]->execDuration.back().start = std::chrono::high_resolution_clock::now();
+    tasks[id]->incExecOrder();
 }
 
 void xptiUtils::addTaskEndExec(const size_t id, std::unordered_map<size_t, std::shared_ptr<xptiUtils::Task>> &tasks) {
@@ -99,6 +102,7 @@ xptiUtils::perTaskStatistic getPerTaskStatistic(const std::unordered_map<size_t,
         const auto& taskMetadata = task.second->getMetainfo();
 
         auto& taskStat = statistic[task.first];
+        taskStat.order = task.second->getExecOrder();
         taskStat.deviceName = deviceIdToName.at(std::stoul(taskMetadata.at(xptiUtils::DEVICE_ID), nullptr));
 
         const std::string& nodeType = taskMetadata.at(xptiUtils::NODE_TYPE);
