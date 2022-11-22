@@ -212,7 +212,7 @@ XPTI_CALLBACK_API void tpCallback(uint16_t TraceType,
   std::string evName;
   if (UserData != nullptr) {
     evName = reinterpret_cast<const char *>(UserData);
-    std::cout << evName << std::endl;
+    std::cout << "     " << evName << std::endl;
   }
   // printf("%-25lu: name=%-35s cpu=%3d event_id=%10lu\n", Time, Name.c_str(), CPU,
   //        ID);
@@ -221,8 +221,8 @@ XPTI_CALLBACK_API void tpCallback(uint16_t TraceType,
     xpti::metadata_t *Metadata = xptiQueryMetadata(Event);
     for (const auto &Item : *Metadata) {
       const auto name = std::string(xptiLookupString(Item.first));
-      if (name == "copy_from_id" || name == "copy_to_id") {
-        std::cout << "     ";
+      if (name == "copy_from" || name == "copy_to") {
+        std::cout << "          ";
         std::cout << name << " : ";
         std::cout << xpti::readMetadata(Item) << "\n";
       }
