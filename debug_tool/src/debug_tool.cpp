@@ -212,22 +212,22 @@ XPTI_CALLBACK_API void tpCallback(uint16_t TraceType,
   std::string evName;
   if (UserData != nullptr) {
     evName = reinterpret_cast<const char *>(UserData);
-    std::cout << "     " << evName << std::endl;
+    std::cout << "     === " << evName << " ===" << std::endl;
   }
   // printf("%-25lu: name=%-35s cpu=%3d event_id=%10lu\n", Time, Name.c_str(), CPU,
   //        ID);
   // Go through all available meta-data for an event and print it out
-  if (evName == "memory_transfer_node") {
-    xpti::metadata_t *Metadata = xptiQueryMetadata(Event);
-    for (const auto &Item : *Metadata) {
-      const auto name = std::string(xptiLookupString(Item.first));
-      if (name == "copy_from" || name == "copy_to") {
-        std::cout << "          ";
-        std::cout << name << " : ";
-        std::cout << xpti::readMetadata(Item) << "\n";
-      }
-    }
-  }
+  // if (evName == "memory_transfer_node") {
+  //   xpti::metadata_t *Metadata = xptiQueryMetadata(Event);
+  //   for (const auto &Item : *Metadata) {
+  //     const auto name = std::string(xptiLookupString(Item.first));
+  //     if (name == "copy_from" || name == "copy_to") {
+  //       std::cout << "          ";
+  //       std::cout << name << " : ";
+  //       std::cout << xpti::readMetadata(Item) << "\n";
+  //     }
+  //   }
+  // }
 
   // if (Payload->source_file_sid() != xpti::invalid_id && Payload->line_no > 0) {
   //   printf("---[Source file:line no] %s:%d\n", Payload->source_file,
