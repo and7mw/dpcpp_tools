@@ -36,7 +36,7 @@ XPTI_CALLBACK_API void xptiTraceInit(unsigned int major_version,
                                      const char *version_str,
                                      const char *stream_name) {    
     if (stream_name == std::string(xptiUtils::SYCL_STREAM)) {
-        execGraph = new dumpExecGraphTool::ExecGraph>();
+        execGraph = new dumpExecGraphTool::ExecGraph();
 
         const auto streamId = xptiRegisterStream(stream_name);
 

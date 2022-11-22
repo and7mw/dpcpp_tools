@@ -154,7 +154,9 @@ void printSyclReport() {
         for (const auto& device : syclReport) {
             const auto& reportTmp = device.second;
             std::vector<xptiUtils::profileEntry> report;
-            report.assign(reportTmp.begin(), reportTmp.end());
+            for (const auto& it : reportTmp) {
+                report.emplace_back(it.second);
+            }
 
             std::sort(report.begin(), report.end(),
                       [](const xptiUtils::profileEntry& lhs,

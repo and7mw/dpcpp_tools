@@ -104,7 +104,3 @@ void dumpExecGraphTool::ExecGraph::serialize() const {
     dumpGraphUniq.close();
     dumpGraphMult.close();
 }
-
-dumpExecGraphTool::ExecGraph::~ExecGraph() {
-    serialize();
-}
