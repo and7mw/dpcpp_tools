@@ -13,9 +13,9 @@ namespace {
                                                            xptiUtils::DEVICE_ID,
                                                            xptiUtils::DEVICE_NAME,
                                                            xptiUtils::KERNEL_NAME}},
-        // TODO: fix copy_from / copy_to
         {xptiUtils::MEM_TRANSF_NODE, std::vector<std::string>{xptiUtils::COPY_FROM,
                                                              xptiUtils::DEVICE_ID,
+                                                             xptiUtils::DEVICE_NAME, // TODO: remove?
                                                              xptiUtils::COPY_TO,
                                                              xptiUtils::MEM_OBJ}},
         {xptiUtils::MEM_ALLOC_NODE, std::vector<std::string>{xptiUtils::MEM_OBJ,
@@ -59,6 +59,8 @@ void xptiUtils::addTaskEndExec(const size_t id, std::unordered_map<size_t, std::
     tasks[id]->execDuration.back().end = std::chrono::high_resolution_clock::now();
 }
 
+#include <iostream>
+
 std::unordered_map<std::string, std::string>
 xptiUtils::extractMetadata(xpti::trace_event_data_t *event,const void *userData) {
     const std::string nodeType = reinterpret_cast<const char *>(userData);
@@ -67,10 +69,12 @@ xptiUtils::extractMetadata(xpti::trace_event_data_t *event,const void *userData)
     const xpti::metadata_t *xptiMetadata = xptiQueryMetadata(event);
 
     metadata[xptiUtils::NODE_TYPE] = nodeType;
+    std::cout << "+++ " << nodeType << std::endl;
     if (attrForTask.count(nodeType)) {
         const auto& attrs = attrForTask.at(nodeType);
         for (const auto &item : *xptiMetadata) {
             const std::string typeInfo = xptiLookupString(item.first);
+            std::cout << "=== " << typeInfo << std::endl;
             if (std::find(attrs.begin(), attrs.end(), typeInfo) != attrs.end()) {
                 metadata[typeInfo] = xpti::readMetadata(item);
             }
@@ -84,29 +88,40 @@ xptiUtils::extractMetadata(xpti::trace_event_data_t *event,const void *userData)
     return metadata;
 }
 
-xptiUtils::perTaskStatistic getPerTaskStatistic(const std::unordered_map<size_t, std::shared_ptr<xptiUtils::Task>> tasks) {
+#include <iostream>
+
+xptiUtils::perTaskStatistic xptiUtils::getPerTaskStatistic(
+        const std::unordered_map<size_t, std::shared_ptr<xptiUtils::Task>> tasks) {
     std::unordered_map<size_t, std::string> deviceIdToName;
     const std::string hostDeviceName = "Host";
     deviceIdToName[0] = hostDeviceName;
-
+std::cout << "1.0" << std::endl;
     // extract device info
     for (const auto& task : tasks) {
         const auto& metadata = task.second->getMetainfo();
+        for (const auto& qqq : metadata) {
+            std::cout << qqq.first << " " << qqq.second << std::endl;
+        }
+std::cout << "1.0.1" << std::endl;
         const auto id = std::stoul(metadata.at(xptiUtils::DEVICE_ID), nullptr);
+std::cout << "1.0.2" << std::endl;
         deviceIdToName[id] = metadata.at(xptiUtils::DEVICE_NAME);
+std::cout << "1.0.3" << std::endl;
     }
-
+    // exit(1);
+std::cout << "1.1" << std::endl;
     // main loop
     xptiUtils::perTaskStatistic statistic;
     for (const auto& task : tasks) {
+std::cout << "1.2" << std::endl;
         const auto& taskMetadata = task.second->getMetainfo();
 
         auto& taskStat = statistic[task.first];
         taskStat.order = task.second->getExecOrder();
         taskStat.deviceName = deviceIdToName.at(std::stoul(taskMetadata.at(xptiUtils::DEVICE_ID), nullptr));
-
+std::cout << "1.3" << std::endl;
         const std::string& nodeType = taskMetadata.at(xptiUtils::NODE_TYPE);
-
+std::cout << "1.4" << std::endl;
         std::string taskName;
         if (nodeType == xptiUtils::COMMAND_NODE) {
             taskName = taskMetadata.at(xptiUtils::KERNEL_NAME);
@@ -141,18 +156,18 @@ xptiUtils::perTaskStatistic getPerTaskStatistic(const std::unordered_map<size_t,
                 }
             }
         }
-
+std::cout << "1.5" << std::endl;
         // fill statistic
         taskStat.name = taskName;
         taskStat.id = task.first;
         taskStat.type = nodeType;
-
+std::cout << "1.6" << std::endl;
         auto& metadata = taskStat.metadata;
-        metadata += "[" + taskMetadata.at(xptiUtils::DEVICE_TYPE) + "]" + taskMetadata.at(xptiUtils::DEVICE_NAME) + "\n";
-        if (taskStat.type == xptiUtils::MEM_ALLOC_NODE || taskStat.type == xptiUtils::MEM_DEALLOC_NODE) {
+        metadata += /*"[" + taskMetadata.at(xptiUtils::DEVICE_TYPE) + "]" +*/ taskMetadata.at(xptiUtils::DEVICE_NAME) + "\n";
+        if (taskStat.type == xptiUtils::MEM_ALLOC_NODE) {
             metadata += "Mem obj id: " + taskMetadata.at(xptiUtils::MEM_OBJ) + "\n";
         }
-
+std::cout << "1.7" << std::endl;
         // fill metrics
         auto& times = task.second->execDuration;;
         for (const auto& time : times) {

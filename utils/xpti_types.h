@@ -16,8 +16,8 @@ namespace xptiUtils {
     inline const char* DEVICE_ID = "sycl_device";
     inline const char* DEVICE_NAME = "sycl_device_name";
     inline const char* KERNEL_NAME = "kernel_name";
-    inline const char* COPY_FROM = "copy_from_id";
-    inline const char* COPY_TO = "copy_to_id";
+    inline const char* COPY_FROM = "copy_from";
+    inline const char* COPY_TO = "copy_to";
     inline const char* MEM_OBJ = "memory_object";
 
     // env var

@@ -7,13 +7,16 @@
 using namespace xptiUtils;
 using perTaskTypeStat = profilerTool::syclCollector::perTaskTypeStat;
 
+#include <iostream>
+
 std::unordered_map<std::string, perTaskTypeStat> profilerTool::syclCollector::getProfileReport() const {
     // device to statistic
     std::unordered_map<std::string, perTaskTypeStat> result;
 
     std::unordered_map<std::string, uint64_t> deviceTotalTime;
-
-    const auto& tasksMetrics = xptiUtils::getPerTaskStatistic(tasks);
+    std::cout << "0.1" << std::endl;
+    const auto& tasksMetrics = getPerTaskStatistic(tasks);
+    std::cout << "0.2" << std::endl;
     for (const auto& task : tasksMetrics) {
         const auto taskMetrics = task.second;
         auto& typeTaskMetrics = result[taskMetrics.deviceName][taskMetrics.name];
@@ -39,14 +42,6 @@ std::unordered_map<std::string, perTaskTypeStat> profilerTool::syclCollector::ge
             profileEntry.timePercent = (static_cast<double>(profileEntry.totalTime) / deviceTotalTime.at(it->first)) * 100.0f;
         }
     }
-
-    // for (auto& table : result) {
-    //     std::sort(table.second.begin(), table.second.end(),
-    //               [](const xptiUtils::profileEntry& lhs,
-    //                  const xptiUtils::profileEntry& rhs) {
-    //         return lhs.totalTime > rhs.totalTime;
-    //     });
-    // }   
 
     return result;
 }
