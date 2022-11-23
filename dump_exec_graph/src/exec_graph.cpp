@@ -92,16 +92,18 @@ void dumpExecGraphTool::ExecGraph::serialize() const {
     uniqueEdges.erase(lastEdge, uniqueEdges.end());
     dumpGraphUniq << firstPartGraph.str();
     for (const auto& edge : uniqueEdges) {
-        dumpGraphUniq << "N" << edge->getParent() << " -> N" << edge->getChild() << std::endl;
+        dumpGraphUniq << "N" << edge->getParent() << " -> N" << edge->getChild()
+                      << " [label=\"" << edge->getName() << "\"];" << std::endl;
     }
     dumpGraphUniq << "}" << std::endl;
     // mult edges
     dumpGraphMult << firstPartGraph.str();
     for (const auto& edge : edges) {
-        dumpGraphMult << "N" << edge->getParent() << " -> N" << edge->getChild() << std::endl;
+        dumpGraphMult << "N" << edge->getParent() << " -> N" << edge->getChild()
+                      << " [label=\"" << edge->getName() << "\"];" << std::endl;
     }
     dumpGraphMult << "}" << std::endl;
-    
+
     // close files
     dumpGraphUniq.close();
     dumpGraphMult.close();

@@ -148,7 +148,15 @@ xptiUtils::perTaskStatistic xptiUtils::getPerTaskStatistic(
 
         auto& metadata = taskStat.metadata;
         // TODO: fix
-        metadata += /*"[" + taskMetadata.at(xptiUtils::DEVICE_TYPE) + "]" +*/ taskMetadata.at(xptiUtils::DEVICE_NAME) + "\n";
+        metadata += /*"[" + taskMetadata.at(xptiUtils::DEVICE_TYPE) + "]" +*/ taskStat.deviceName + "\n";
+        metadata += "Order: ";
+        for (size_t i = 0; i < taskStat.order.size(); i++) {
+            metadata += std::to_string(taskStat.order[i]);
+            if (i != taskStat.order.size() - 1) {
+                metadata += ", ";
+            }
+        }
+        metadata += "\n";
         if (taskStat.type == xptiUtils::MEM_ALLOC_NODE) {
             metadata += "Mem obj id: " + taskMetadata.at(xptiUtils::MEM_OBJ) + "\n";
         }
