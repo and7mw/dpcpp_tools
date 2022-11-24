@@ -1,0 +1,65 @@
+From cff394189e9a86eaf9d9dab324a81b032240287f Mon Sep 17 00:00:00 2001
+From: and7mw <and7mw@gmail.com>
+Date: Tue, 22 Nov 2022 22:18:26 +0300
+Subject: [PATCH] [XPTI] WA for mem transfer id generation
+
+    - Name in payload for memory transfer operation contain comprises from name + ptr.
+    - It's not possible to distinguish operation which work with same memory, but with different src and dst.
+---
+ sycl/source/detail/scheduler/commands.cpp | 12 ++++++++++--
+ sycl/source/detail/scheduler/commands.hpp |  2 +-
+ 2 files changed, 11 insertions(+), 3 deletions(-)
+
+diff --git a/sycl/source/detail/scheduler/commands.cpp b/sycl/source/detail/scheduler/commands.cpp
+index ca89854f64cd..f124027b7cad 100644
+--- a/sycl/source/detail/scheduler/commands.cpp
++++ b/sycl/source/detail/scheduler/commands.cpp
+@@ -532,7 +532,7 @@ void Command::emitEdgeEventForEventDependence(Command *Cmd,
+ #endif
+ }
+ 
+-uint64_t Command::makeTraceEventProlog(void *MAddress) {
++uint64_t Command::makeTraceEventProlog(void *MAddress, const char* postfix) {
+   uint64_t CommandInstanceNo = 0;
+ #ifdef XPTI_ENABLE_INSTRUMENTATION
+   if (!xptiTraceEnabled())
+@@ -547,6 +547,10 @@ uint64_t Command::makeTraceEventProlog(void *MAddress) {
+   std::string CommandString =
+       SH.nameWithAddressString(MCommandName, MAddressString);
+ 
++  if (postfix != nullptr) {
++    CommandString += postfix;
++  }
++
+   xpti::payload_t p(CommandString.c_str(), MAddress);
+   xpti_td *CmdTraceEvent =
+       xptiMakeEvent(CommandString.c_str(), &p, xpti::trace_graph_event,
+@@ -1307,7 +1311,11 @@ void MemCpyCommand::emitInstrumentationData() {
+   // Create a payload with the command name and an event using this payload to
+   // emit a node_create
+   MAddress = MSrcAllocaCmd->getSYCLMemObj();
+-  makeTraceEventProlog(MAddress);
++
++  std::string postfix = "_" + std::to_string(deviceToID(MSrcQueue->get_device())) +
++                        "_" + std::to_string(deviceToID(MQueue->get_device()));
++
++  makeTraceEventProlog(MAddress, postfix.c_str());
+ 
+   if (MFirstInstance) {
+     xpti_td *CmdTraceEvent = static_cast<xpti_td *>(MTraceEvent);
+diff --git a/sycl/source/detail/scheduler/commands.hpp b/sycl/source/detail/scheduler/commands.hpp
+index 75b2ae82ed3e..970008187737 100644
+--- a/sycl/source/detail/scheduler/commands.hpp
++++ b/sycl/source/detail/scheduler/commands.hpp
+@@ -173,7 +173,7 @@ public:
+   /// check for xptiTraceEnabled().
+   /// Post Condition: MTraceEvent will be set to the event created.
+   /// \param MAddress  The address to use to create the payload.
+-  uint64_t makeTraceEventProlog(void *MAddress);
++  uint64_t makeTraceEventProlog(void *MAddress, const char* postfix = nullptr);
+   /// If prolog has been run, run epilog; this must be guarded by a check for
+   /// xptiTraceEnabled().
+   void makeTraceEventEpilog();
+-- 
+2.17.1
+

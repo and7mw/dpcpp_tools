@@ -1,0 +1,46 @@
+From 306afb12acc572c592653b2a87d0c36cfc527d11 Mon Sep 17 00:00:00 2001
+From: and7mw <and7mw@gmail.com>
+Date: Thu, 24 Nov 2022 19:32:07 +0300
+Subject: [PATCH] [XPTI] WA for unique id generation.
+
+    - Hash function generate not unique hash values.
+---
+ xptifw/src/xpti_trace_framework.cpp | 22 ++++++++++++++++++++++
+ 1 file changed, 22 insertions(+)
+
+diff --git a/xptifw/src/xpti_trace_framework.cpp b/xptifw/src/xpti_trace_framework.cpp
+index 4ab65285872d..8097bbff587c 100644
+--- a/xptifw/src/xpti_trace_framework.cpp
++++ b/xptifw/src/xpti_trace_framework.cpp
+@@ -495,6 +495,28 @@ private:
+       return nullptr;
+ 
+     std::lock_guard<std::mutex> Lock(MEventMutex);
++
++    if (MEvents.count(HashValue)) {
++        const auto& existEvent = MEvents[HashValue];
++        if (!(existEvent.reserved.payload->uid == TempPayload.uid)) {
++            if (MEvents.size() == std::numeric_limits<uint64_t>::max()) {
++              throw std::runtime_error("TODO");
++            }
++            while (true) {
++              ++HashValue;
++              if (!MEvents.count(HashValue)) {
++                TempPayload.internal = HashValue;
++                break;
++              } else {
++                if (MEvents.at(HashValue).reserved.payload->uid == TempPayload.uid) {
++                  TempPayload.internal = HashValue;
++                  break;
++                }
++              }
++            }
++        }
++    }
++
+     auto EvLoc = MEvents.find(HashValue);
+     if (EvLoc != MEvents.end()) {
+ #ifdef XPTI_STATISTICS
+-- 
+2.17.1
+
