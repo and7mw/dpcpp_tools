@@ -162,7 +162,7 @@ xptiUtils::perTaskStatistic xptiUtils::getPerTaskStatistic(
         }
 
         // fill metrics
-        auto& times = task.second->execDuration;;
+        auto& times = task.second->execDuration;
         for (const auto& time : times) {
             taskStat.count++;
             const size_t currTime = std::chrono::duration_cast<std::chrono::microseconds>(time.end - time.start).count();

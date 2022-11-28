@@ -19,8 +19,8 @@ std::unordered_map<std::string, perTaskTypeStat> profilerTool::syclCollector::ge
 
         typeTaskMetrics.totalTime += taskMetrics.totalTime;
         typeTaskMetrics.count += taskMetrics.count;
-        typeTaskMetrics.min += taskMetrics.min;
-        typeTaskMetrics.max += taskMetrics.max;
+        typeTaskMetrics.min = std::min(taskMetrics.min, typeTaskMetrics.min);
+        typeTaskMetrics.max = std::max(taskMetrics.max, typeTaskMetrics.max);
         typeTaskMetrics.name = taskMetrics.name;
 
         // total device time
