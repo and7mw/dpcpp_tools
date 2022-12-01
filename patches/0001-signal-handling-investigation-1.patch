@@ -1,0 +1,119 @@
+From 3ece319fc43e32ee68a852495b9d00283972bf8e Mon Sep 17 00:00:00 2001
+From: and7mw <and7mw@gmail.com>
+Date: Thu, 1 Dec 2022 23:39:20 +0300
+Subject: [PATCH] signal handling investigation 1
+
+---
+ sycl/plugins/cuda/pi_cuda.cpp             | 21 ++++++++++++++++++---
+ sycl/plugins/cuda/pi_cuda.hpp             |  2 ++
+ sycl/source/detail/event_impl.cpp         |  4 ++--
+ sycl/source/detail/scheduler/commands.cpp |  2 ++
+ 4 files changed, 24 insertions(+), 5 deletions(-)
+
+diff --git a/sycl/plugins/cuda/pi_cuda.cpp b/sycl/plugins/cuda/pi_cuda.cpp
+index 809b366908be..ed536d957cf3 100644
+--- a/sycl/plugins/cuda/pi_cuda.cpp
++++ b/sycl/plugins/cuda/pi_cuda.cpp
+@@ -427,6 +427,7 @@ _pi_event::_pi_event(pi_command_type type, pi_context context, pi_queue queue,
+ }
+ 
+ _pi_event::~_pi_event() {
++  std::cout << "DESTROY CUDA pi_event: " << this << std::endl;
+   if (queue_ != nullptr) {
+     cuda_piQueueRelease(queue_);
+   }
+@@ -448,6 +449,9 @@ pi_result _pi_event::start() {
+   }
+ 
+   isStarted_ = true;
++  start_pert = std::chrono::high_resolution_clock::now();
++  // std::cout << "RECORED S TIME: "
++  //   << static_cast<pi_uint64>(std::chrono::duration_cast<std::chrono::nanoseconds>(start_pert.time_since_epoch()).count()) << std::endl;
+   return result;
+ }
+ 
+@@ -520,6 +524,9 @@ pi_result _pi_event::record() {
+ 
+   if (result == PI_SUCCESS) {
+     isRecorded_ = true;
++    end_pert = std::chrono::high_resolution_clock::now();
++    // std::cout << "RECORED E TIME: "
++    // << static_cast<pi_uint64>(std::chrono::duration_cast<std::chrono::nanoseconds>(end_pert.time_since_epoch()).count()) << std::endl;
+   }
+ 
+   return result;
+@@ -3666,7 +3673,7 @@ pi_result cuda_piEventGetProfilingInfo(pi_event event,
+                                        size_t *param_value_size_ret) {
+ 
+   assert(event != nullptr);
+-
++  std::cout << "cuda_piEventGetProfilingInfo : " << event << std::endl;
+   pi_queue queue = event->get_queue();
+   if (queue == nullptr || !(queue->properties_ & PI_QUEUE_PROFILING_ENABLE)) {
+     return PI_ERROR_PROFILING_INFO_NOT_AVAILABLE;
+@@ -3678,11 +3685,19 @@ pi_result cuda_piEventGetProfilingInfo(pi_event event,
+     return getInfo<pi_uint64>(param_value_size, param_value,
+                               param_value_size_ret, event->get_queued_time());
+   case PI_PROFILING_INFO_COMMAND_START:
++    std::cout << "S TIME: "
++    << static_cast<pi_uint64>(std::chrono::duration_cast<std::chrono::nanoseconds>(event->start_pert.time_since_epoch()).count()) << std::endl;
+     return getInfo<pi_uint64>(param_value_size, param_value,
+-                              param_value_size_ret, event->get_start_time());
++                              param_value_size_ret,
++// static_cast<pi_uint64>(std::chrono::duration_cast<std::chrono::milliseconds>(event->start_pert.time_since_epoch()).count())
++                              event->get_start_time());
+   case PI_PROFILING_INFO_COMMAND_END:
++    std::cout << "E TIME: "
++    << static_cast<pi_uint64>(std::chrono::duration_cast<std::chrono::nanoseconds>(event->end_pert.time_since_epoch()).count()) << std::endl;
+     return getInfo<pi_uint64>(param_value_size, param_value,
+-                              param_value_size_ret, event->get_end_time());
++                              param_value_size_ret,
++// static_cast<pi_uint64>(std::chrono::duration_cast<std::chrono::milliseconds>(event->end_pert.time_since_epoch()).count())
++                              event->get_end_time());
+   default:
+     __SYCL_PI_HANDLE_UNKNOWN_PARAM_NAME(param_name);
+   }
+diff --git a/sycl/plugins/cuda/pi_cuda.hpp b/sycl/plugins/cuda/pi_cuda.hpp
+index b085429defd1..6f8b7a91549f 100644
+--- a/sycl/plugins/cuda/pi_cuda.hpp
++++ b/sycl/plugins/cuda/pi_cuda.hpp
+@@ -587,6 +587,8 @@ public:
+ 
+   ~_pi_event();
+ 
++  std::chrono::high_resolution_clock::time_point start_pert, end_pert, offset_perf;
++
+ private:
+   // This constructor is private to force programmers to use the make_native /
+   // make_user static members in order to create a pi_event for CUDA.
+diff --git a/sycl/source/detail/event_impl.cpp b/sycl/source/detail/event_impl.cpp
+index 09df5c8f4b38..e48c99f5837f 100644
+--- a/sycl/source/detail/event_impl.cpp
++++ b/sycl/source/detail/event_impl.cpp
+@@ -46,8 +46,8 @@ cl_event event_impl::get() const {
+ }
+ 
+ event_impl::~event_impl() {
+-  if (MEvent)
+-    getPlugin().call<PiApiKind::piEventRelease>(MEvent);
++  // if (MEvent)
++  //   getPlugin().call<PiApiKind::piEventRelease>(MEvent);
+ }
+ 
+ void event_impl::waitInternal() {
+diff --git a/sycl/source/detail/scheduler/commands.cpp b/sycl/source/detail/scheduler/commands.cpp
+index f124027b7cad..3081d47ae974 100644
+--- a/sycl/source/detail/scheduler/commands.cpp
++++ b/sycl/source/detail/scheduler/commands.cpp
+@@ -1792,6 +1792,8 @@ void ExecCGCommand::emitInstrumentationData() {
+       xptiMakeEvent("ExecCG", &Payload, xpti::trace_graph_event,
+                     xpti::trace_activity_type_t::active, &CGKernelInstanceNo);
+ 
++  CmdTraceEvent->global_user_data = MQueue->getPlugin().getPiPluginPtr().get();
++
+   if (CmdTraceEvent) {
+     MInstanceID = CGKernelInstanceNo;
+     MTraceEvent = (void *)CmdTraceEvent;
+-- 
+2.17.1
+
