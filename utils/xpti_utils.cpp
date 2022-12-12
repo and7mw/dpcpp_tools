@@ -35,28 +35,55 @@ void xptiUtils::addTask(const size_t id,
         throw std::runtime_error("Can't add new task with id: " + std::to_string(id) + ". Already exist!");
     }
     tasks[id] = std::make_shared<Task>(metainfo);
+    if (metainfo.at(xptiUtils::NODE_TYPE) == xptiUtils::COMMAND_NODE) {
+        tasks[id]->m_taskType = Task::taskType::KERNEL;
+    }
 }
 
 void xptiUtils::addTaskStartExec(const size_t id, std::unordered_map<size_t, std::shared_ptr<xptiUtils::Task>> &tasks) {
-    if (!tasks.count(id)) {
-        throw std::runtime_error("Can't add start time for Task with id: " + std::to_string(id) +
-                                 ". Task missing in graph!");
+    if (tasks[id]->m_taskType != Task::taskType::KERNEL) {
+        if (!tasks.count(id)) {
+            throw std::runtime_error("Can't add start time for Task with id: " + std::to_string(id) +
+                                     ". Task missing in graph!");
+        }
+        tasks[id]->execDuration.push_back(xptiUtils::TimeRecord());
+        tasks[id]->execDuration.back().start = std::chrono::high_resolution_clock::now();
+        tasks[id]->incExecOrder();
     }
-    tasks[id]->execDuration.push_back(xptiUtils::TimeRecord());
-    tasks[id]->execDuration.back().start = std::chrono::high_resolution_clock::now();
-    tasks[id]->incExecOrder();
 }
 
 void xptiUtils::addTaskEndExec(const size_t id, std::unordered_map<size_t, std::shared_ptr<xptiUtils::Task>> &tasks) {
+    if (tasks[id]->m_taskType != Task::taskType::KERNEL) {
+        if (!tasks.count(id)) {
+            throw std::runtime_error("Can't add end time for task with id: " + std::to_string(id) +
+                                     ". Task missing in graph!");
+        }
+        if (tasks[id]->execDuration.empty()) {
+            throw std::runtime_error("Can't add end time for task with id: " + std::to_string(id) +
+                                     ". Start time for Task don't set!");
+        }
+        tasks[id]->execDuration.back().end = std::chrono::high_resolution_clock::now();
+    }
+}
+
+void xptiUtils::addSignalHandler(xpti::trace_event_data_t *event, const void *ptrToEvent,
+                                 std::unordered_map<size_t, std::shared_ptr<xptiUtils::Task>> &tasks) {
+    const size_t id = event->unique_id;
     if (!tasks.count(id)) {
-        throw std::runtime_error("Can't add end time for task with id: " + std::to_string(id) +
+        throw std::runtime_error("Can't add profile event for Task with id: " + std::to_string(id) +
                                  ". Task missing in graph!");
     }
-    if (tasks[id]->execDuration.empty()) {
-        throw std::runtime_error("Can't add end time for task with id: " + std::to_string(id) +
-                                 ". Start time for Task don't set!");
+
+    if (tasks[id]->m_taskType == Task::taskType::KERNEL) {
+        _pi_event * piEv = static_cast<_pi_event *>(const_cast<void *>(ptrToEvent));
+
+        if (tasks[id]->piPlugin == nullptr) {
+            tasks[id]->piPlugin = static_cast<_pi_plugin*>(event->global_user_data);
+        }
+
+        tasks[id]->profileEvents.push_back(piEv);
+        tasks[id]->incExecOrder();
     }
-    tasks[id]->execDuration.back().end = std::chrono::high_resolution_clock::now();
 }
 
 std::unordered_map<std::string, std::string>
@@ -162,14 +189,54 @@ xptiUtils::perTaskStatistic xptiUtils::getPerTaskStatistic(
         }
 
         // fill metrics
-        auto& times = task.second->execDuration;
-        for (const auto& time : times) {
-            taskStat.count++;
-            const size_t currTime = std::chrono::duration_cast<std::chrono::microseconds>(time.end - time.start).count();
-            taskStat.totalTime += currTime;
+        if (task.second->m_taskType == Task::taskType::KERNEL) {
+            auto& profileEvent = task.second->profileEvents;
+            auto piPlg = task.second->piPlugin;
+            for (const auto& currProfEv : profileEvent) {
+                constexpr uint64_t NSEC_IN_MICSEC = 1000;
 
-            taskStat.min = std::min(taskStat.min, currTime);
-            taskStat.max = std::max(taskStat.max, currTime);
+                taskStat.count++;
+
+                uint64_t start = 0;
+                auto ret = (*piPlg->PiFunctionTable.piEventGetProfilingInfo)(
+                  currProfEv,
+                  _pi_profiling_info::PI_PROFILING_INFO_COMMAND_START,
+                  sizeof(uint64_t),
+                  &start,
+                  nullptr
+                );
+                // if (ret != _pi_result::PI_SUCCESS) {
+                //     std::cout << "Can't get start time of kernel execution!" << std::endl;
+                // }
+                uint64_t end = 0;
+                ret = (*piPlg->PiFunctionTable.piEventGetProfilingInfo)(
+                  currProfEv,
+                  _pi_profiling_info::PI_PROFILING_INFO_COMMAND_END,
+                  sizeof(uint64_t),
+                  &end,
+                  nullptr
+                );
+                // if (ret != _pi_result::PI_SUCCESS) {
+                //     std::cout << "Can't get end time of kernel execution!" << std::endl;
+                // }
+
+                uint64_t currTime = end - start;
+                currTime /= NSEC_IN_MICSEC;
+                taskStat.totalTime += currTime;
+    
+                taskStat.min = std::min(taskStat.min, currTime);
+                taskStat.max = std::max(taskStat.max, currTime);
+            }
+        } else {
+            auto& times = task.second->execDuration;
+            for (const auto& time : times) {
+                taskStat.count++;
+                const size_t currTime = std::chrono::duration_cast<std::chrono::microseconds>(time.end - time.start).count();
+                taskStat.totalTime += currTime;
+
+                taskStat.min = std::min(taskStat.min, currTime);
+                taskStat.max = std::max(taskStat.max, currTime);
+            }
         }
     }
 

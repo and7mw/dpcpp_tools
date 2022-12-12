@@ -30,6 +30,12 @@ XPTI_CALLBACK_API void taskCallback(uint16_t trace_type,
                                     uint64_t instance,
                                     const void *user_data);
 
+XPTI_CALLBACK_API void signalCallback(uint16_t trace_type,
+                                      xpti::trace_event_data_t *parent,
+                                      xpti::trace_event_data_t *event,
+                                      uint64_t instance,
+                                      const void *user_data);
+
 // TODO: handle major_version, minor_version, version_str?
 XPTI_CALLBACK_API void xptiTraceInit(unsigned int major_version,
                                      unsigned int minor_version,
@@ -57,6 +63,10 @@ XPTI_CALLBACK_API void xptiTraceInit(unsigned int major_version,
         xptiRegisterCallback(streamId,
                              static_cast<uint16_t>(xpti::trace_point_type_t::task_end),
                              taskCallback);
+
+        xptiRegisterCallback(streamId,
+                             static_cast<uint16_t>(xpti::trace_point_type_t::signal),
+                             signalCallback);
     }
 }
 
@@ -109,4 +119,14 @@ XPTI_CALLBACK_API void taskCallback(uint16_t trace_type,
         throw std::runtime_error("Can't handle trace point: " + std::to_string(trace_type) +
                                  ". Support only task_begin and task_end!");
     }
+}
+
+XPTI_CALLBACK_API void signalCallback(uint16_t trace_type,
+                                      xpti::trace_event_data_t *parent,
+                                      xpti::trace_event_data_t *event,
+                                      uint64_t instance,
+                                      const void *user_data) {
+    std::lock_guard<std::mutex> lock(mutex);
+
+    xptiUtils::addSignalHandler(event, user_data, execGraph->tasks);
 }

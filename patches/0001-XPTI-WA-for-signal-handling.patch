@@ -1,0 +1,190 @@
+From af76ede403fca6833c3722fc2adba23868aae2c4 Mon Sep 17 00:00:00 2001
+From: and7mw <and7mw@gmail.com>
+Date: Thu, 1 Dec 2022 23:39:20 +0300
+Subject: [PATCH] [XPTI] WA for signal handling
+
+---
+ .../CL/sycl/detail/property_list_base.hpp     |  2 +-
+ sycl/include/CL/sycl/property_list.hpp        |  2 +-
+ sycl/plugins/cuda/pi_cuda.cpp                 | 19 +++++++++++----
+ sycl/plugins/cuda/pi_cuda.hpp                 |  2 ++
+ sycl/source/detail/event_impl.cpp             | 23 +++++++++++++++++--
+ sycl/source/detail/queue_impl.hpp             | 22 ++++++++++++++++--
+ sycl/source/detail/scheduler/commands.cpp     |  2 ++
+ 7 files changed, 62 insertions(+), 10 deletions(-)
+
+diff --git a/sycl/include/CL/sycl/detail/property_list_base.hpp b/sycl/include/CL/sycl/detail/property_list_base.hpp
+index d3f1ec09d44a..6872c5211dce 100644
+--- a/sycl/include/CL/sycl/detail/property_list_base.hpp
++++ b/sycl/include/CL/sycl/detail/property_list_base.hpp
+@@ -126,7 +126,7 @@ protected:
+       MPropsWithData.pop_back();
+     }
+   }
+-
++public:
+   // Stores enabled/disabled for simple properties
+   std::bitset<DataLessPropKind::DataLessPropKindSize> MDataLessProps;
+   // Stores shared_ptrs to complex properties
+diff --git a/sycl/include/CL/sycl/property_list.hpp b/sycl/include/CL/sycl/property_list.hpp
+index 7431727fe0f9..2bf4ff70647f 100644
+--- a/sycl/include/CL/sycl/property_list.hpp
++++ b/sycl/include/CL/sycl/property_list.hpp
+@@ -23,7 +23,7 @@ template <typename... PropsT> class accessor_property_list;
+ /// Objects of the property_list class are containers for the SYCL properties
+ ///
+ /// \ingroup sycl_api
+-class property_list : protected detail::PropertyListBase {
++class property_list : public detail::PropertyListBase {
+ 
+   // The structs validate that all objects passed are SYCL properties
+   template <typename... Tail> struct AllProperties : std::true_type {};
+diff --git a/sycl/plugins/cuda/pi_cuda.cpp b/sycl/plugins/cuda/pi_cuda.cpp
+index 809b366908be..fd6201e5c275 100644
+--- a/sycl/plugins/cuda/pi_cuda.cpp
++++ b/sycl/plugins/cuda/pi_cuda.cpp
+@@ -3677,12 +3677,23 @@ pi_result cuda_piEventGetProfilingInfo(pi_event event,
+   case PI_PROFILING_INFO_COMMAND_SUBMIT:
+     return getInfo<pi_uint64>(param_value_size, param_value,
+                               param_value_size_ret, event->get_queued_time());
+-  case PI_PROFILING_INFO_COMMAND_START:
++  case PI_PROFILING_INFO_COMMAND_START: {
++    if (event->start_pert == 0) {
++      event->start_pert = event->get_start_time();
++    }
+     return getInfo<pi_uint64>(param_value_size, param_value,
+-                              param_value_size_ret, event->get_start_time());
+-  case PI_PROFILING_INFO_COMMAND_END:
++                              param_value_size_ret,
++                              event->start_pert);
++  }
++  case PI_PROFILING_INFO_COMMAND_END: {
++    if (event->end_pert == 0) {
++      event->end_pert = event->get_end_time();
++    }
+     return getInfo<pi_uint64>(param_value_size, param_value,
+-                              param_value_size_ret, event->get_end_time());
++                              param_value_size_ret,
++                              event->end_pert);
++  }
++    
+   default:
+     __SYCL_PI_HANDLE_UNKNOWN_PARAM_NAME(param_name);
+   }
+diff --git a/sycl/plugins/cuda/pi_cuda.hpp b/sycl/plugins/cuda/pi_cuda.hpp
+index b085429defd1..cefcacaeb2d8 100644
+--- a/sycl/plugins/cuda/pi_cuda.hpp
++++ b/sycl/plugins/cuda/pi_cuda.hpp
+@@ -587,6 +587,8 @@ public:
+ 
+   ~_pi_event();
+ 
++  uint64_t start_pert = 0, end_pert = 0;
++
+ private:
+   // This constructor is private to force programmers to use the make_native /
+   // make_user static members in order to create a pi_event for CUDA.
+diff --git a/sycl/source/detail/event_impl.cpp b/sycl/source/detail/event_impl.cpp
+index 09df5c8f4b38..dff18a7b639e 100644
+--- a/sycl/source/detail/event_impl.cpp
++++ b/sycl/source/detail/event_impl.cpp
+@@ -46,8 +46,27 @@ cl_event event_impl::get() const {
+ }
+ 
+ event_impl::~event_impl() {
+-  if (MEvent)
+-    getPlugin().call<PiApiKind::piEventRelease>(MEvent);
++  const std::string xpti_env_var = "XPTI_TRACE_ENABLE";
++  char* xpti_env_var_val = std::getenv(xpti_env_var.c_str());
++  if (xpti_env_var_val != nullptr && xpti_env_var_val == std::string("1")) {
++    if (MEvent) {
++      uint64_t time = 0;
++      getPlugin().call<PiApiKind::piEventGetProfilingInfo>(MEvent,
++                                                          _pi_profiling_info::PI_PROFILING_INFO_COMMAND_START,
++                                                          sizeof(uint64_t),
++                                                          &time,
++                                                          nullptr);
++      time = 0;
++      getPlugin().call<PiApiKind::piEventGetProfilingInfo>(MEvent,
++                                                          _pi_profiling_info::PI_PROFILING_INFO_COMMAND_END,
++                                                          sizeof(uint64_t),
++                                                          &time,
++                                                          nullptr);
++    }
++  }
++
++  // if (MEvent)
++  //   getPlugin().call<PiApiKind::piEventRelease>(MEvent);
+ }
+ 
+ void event_impl::waitInternal() {
+diff --git a/sycl/source/detail/queue_impl.hpp b/sycl/source/detail/queue_impl.hpp
+index 9a74c21f8fd3..2957f79168b7 100644
+--- a/sycl/source/detail/queue_impl.hpp
++++ b/sycl/source/detail/queue_impl.hpp
+@@ -78,7 +78,13 @@ public:
+   /// \param PropList is a list of properties to use for queue construction.
+   queue_impl(const DeviceImplPtr &Device, const async_handler &AsyncHandler,
+              const property_list &PropList)
+-      : queue_impl(Device, getDefaultOrNew(Device), AsyncHandler, PropList){};
++      : queue_impl(Device, getDefaultOrNew(Device), AsyncHandler, PropList) {
++    const std::string xpti_env_var = "XPTI_TRACE_ENABLE";
++    char* xpti_env_var_val = std::getenv(xpti_env_var.c_str());
++    if (xpti_env_var_val != nullptr && xpti_env_var_val == std::string("1")) {
++      MPropList.MDataLessProps.set(DataLessPropKind::QueueEnableProfiling);
++    }
++  };
+ 
+   /// Constructs a SYCL queue with an async_handler and property_list provided
+   /// form a device and a context.
+@@ -103,6 +109,12 @@ public:
+             (MHostQueue ? true
+                         : (MIsInorder && getPlugin().getBackend() !=
+                                              backend::ext_oneapi_level_zero))) {
++    const std::string xpti_env_var = "XPTI_TRACE_ENABLE";
++    char* xpti_env_var_val = std::getenv(xpti_env_var.c_str());
++    if (xpti_env_var_val != nullptr && xpti_env_var_val == std::string("1")) {
++      MPropList.MDataLessProps.set(DataLessPropKind::QueueEnableProfiling);
++    }                                       
++
+     if (has_property<ext::oneapi::property::queue::discard_events>() &&
+         has_property<property::queue::enable_profiling>()) {
+       throw sycl::exception(make_error_code(errc::invalid),
+@@ -142,6 +154,12 @@ public:
+             (MHostQueue ? true
+                         : (MIsInorder && getPlugin().getBackend() !=
+                                              backend::ext_oneapi_level_zero))) {
++    const std::string xpti_env_var = "XPTI_TRACE_ENABLE";
++    char* xpti_env_var_val = std::getenv(xpti_env_var.c_str());
++    if (xpti_env_var_val != nullptr && xpti_env_var_val == std::string("1")) {
++      MPropList.MDataLessProps.set(DataLessPropKind::QueueEnableProfiling);
++    }
++    
+     if (has_property<ext::oneapi::property::queue::discard_events>() &&
+         has_property<property::queue::enable_profiling>()) {
+       throw sycl::exception(make_error_code(errc::invalid),
+@@ -558,7 +576,7 @@ private:
+   std::vector<event> MEventsShared;
+   exception_list MExceptions;
+   const async_handler MAsyncHandler;
+-  const property_list MPropList;
++  /*const*/ property_list MPropList;
+ 
+   /// List of queues created for FPGA device from a single SYCL queue.
+   std::vector<RT::PiQueue> MQueues;
+diff --git a/sycl/source/detail/scheduler/commands.cpp b/sycl/source/detail/scheduler/commands.cpp
+index f124027b7cad..3081d47ae974 100644
+--- a/sycl/source/detail/scheduler/commands.cpp
++++ b/sycl/source/detail/scheduler/commands.cpp
+@@ -1792,6 +1792,8 @@ void ExecCGCommand::emitInstrumentationData() {
+       xptiMakeEvent("ExecCG", &Payload, xpti::trace_graph_event,
+                     xpti::trace_activity_type_t::active, &CGKernelInstanceNo);
+ 
++  CmdTraceEvent->global_user_data = MQueue->getPlugin().getPiPluginPtr().get();
++
+   if (CmdTraceEvent) {
+     MInstanceID = CGKernelInstanceNo;
+     MTraceEvent = (void *)CmdTraceEvent;
+-- 
+2.17.1
+

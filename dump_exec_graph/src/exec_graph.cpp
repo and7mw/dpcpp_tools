@@ -46,7 +46,7 @@ void dumpExecGraphTool::ExecGraph::serialize() const {
         firstPartGraph << " [label=\"" << task.name << "\n" << task.metadata;
         firstPartGraph << "Avg time: " << std::fixed << std::setprecision(2)
                        << static_cast<double>(task.totalTime) / task.count
-                       << " ms, launched " << task.count << " times";
+                       << " μs, launched " << task.count << " times";
         const float percent = static_cast<double>(task.totalTime) / total * 100.0f;
         firstPartGraph << std::fixed << std::setprecision(2) << ", " << percent << " %";
         firstPartGraph << "\"";

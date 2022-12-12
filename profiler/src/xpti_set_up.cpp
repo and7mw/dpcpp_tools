@@ -36,6 +36,12 @@ XPTI_CALLBACK_API void taskExecCallback(uint16_t trace_type,
                                         uint64_t instance,
                                         const void *user_data);
 
+XPTI_CALLBACK_API void signalCallback(uint16_t trace_type,
+                                      xpti::trace_event_data_t *parent,
+                                      xpti::trace_event_data_t *event,
+                                      uint64_t instance,
+                                      const void *user_data);
+
 // TODO: handle major_version, minor_version, version_str?
 XPTI_CALLBACK_API void xptiTraceInit(unsigned int major_version,
                                      unsigned int minor_version,
@@ -72,6 +78,10 @@ XPTI_CALLBACK_API void xptiTraceInit(unsigned int major_version,
         xptiRegisterCallback(streamId,
                              static_cast<uint16_t>(xpti::trace_point_type_t::task_end),
                              taskExecCallback);
+
+        xptiRegisterCallback(streamId,
+                             static_cast<uint16_t>(xpti::trace_point_type_t::signal),
+                             signalCallback);
     }
 }
 
@@ -121,6 +131,16 @@ XPTI_CALLBACK_API void taskExecCallback(uint16_t trace_type,
         throw std::runtime_error("Can't handle trace point: " + std::to_string(trace_type) +
                                  ". taskExecCallback supports only task_begin and task_end!");
     }
+}
+
+XPTI_CALLBACK_API void signalCallback(uint16_t trace_type,
+                                      xpti::trace_event_data_t *parent,
+                                      xpti::trace_event_data_t *event,
+                                      uint64_t instance,
+                                      const void *user_data) {
+    std::lock_guard<std::mutex> lock(mutex);
+
+    xptiUtils::addSignalHandler(event, user_data, syclCollectorObj->tasks);
 }
 
 const size_t defaultOffset = 10;
@@ -184,12 +204,12 @@ void printSyclPiReport() {
 
 __attribute__((destructor)) static void fwFinialize() {
     std::cout << std::setw(typeOffset) << "Type"
-              << std::setw(defaultOffset) << "Time(%)"
-              << std::setw(defaultOffset) << "Time(ms)"
-              << std::setw(defaultOffset) << "Calls"
-              << std::setw(defaultOffset) << "Avg(ms)"
-              << std::setw(defaultOffset) << "Min(ms)"
-              << std::setw(defaultOffset) << "Max(ms)"
+              << std::setw(defaultOffset + 1) << "Time(%)"
+              << std::setw(defaultOffset + 1) << "Time(μs)"
+              << std::setw(defaultOffset + 1) << "Calls"
+              << std::setw(defaultOffset + 1) << "Avg(μs)"
+              << std::setw(defaultOffset + 1) << "Min(μs)"
+              << std::setw(defaultOffset + 1) << "Max(μs)"
               << std::setw(nameOffset) << "Name"
               << std::endl;
 

@@ -7,6 +7,7 @@
 #include <chrono>
 
 #include "xpti/xpti_trace_framework.hpp"
+#include "CL/sycl/detail/pi.h"
 
 namespace xptiUtils {
     struct profileEntry {
@@ -41,6 +42,11 @@ namespace xptiUtils {
         std::vector<size_t> order;
 
       public:
+        enum taskType {
+            KERNEL,
+            OTHER
+        } m_taskType = taskType::OTHER;
+
         std::vector<TimeRecord> execDuration;
 
         Task(const std::unordered_map<std::string, std::string> &metainfo) : metainfo(metainfo) {}
@@ -57,6 +63,9 @@ namespace xptiUtils {
         void incExecOrder() { order.emplace_back(counter++); }
         const std::vector<size_t>& getExecOrder() const { return order; }
 
+        std::vector<_pi_event*> profileEvents;
+        _pi_plugin* piPlugin = nullptr;
+
       private:
         std::unordered_map<std::string, std::string> metainfo;
     };
@@ -66,6 +75,9 @@ namespace xptiUtils {
                  std::unordered_map<size_t, std::shared_ptr<xptiUtils::Task>> &tasks);
     void addTaskStartExec(const size_t id, std::unordered_map<size_t, std::shared_ptr<xptiUtils::Task>> &tasks);
     void addTaskEndExec(const size_t id, std::unordered_map<size_t, std::shared_ptr<xptiUtils::Task>> &tasks);
+
+    void addSignalHandler(xpti::trace_event_data_t *event, const void *ptrToEvent,
+                          std::unordered_map<size_t, std::shared_ptr<xptiUtils::Task>> &tasks);
 };
 
 namespace xptiUtils {
