@@ -8,12 +8,30 @@
 #include <iostream>
 #include <algorithm>
 #include <cstdlib>
+#include <unordered_set>
 
 void dumpExecGraphTool::ExecGraph::addEdge(const size_t parent,
                                            const size_t child,
                                            const std::string& name) {
     edges.push_back(std::make_shared<Edge>(parent, child, name));
 }
+
+struct EdgeHash {
+    size_t operator()(const std::shared_ptr<dumpExecGraphTool::Edge>& edge) const {
+        return std::hash<size_t>()(edge->getChild()) << 2 +
+               std::hash<size_t>()(edge->getParent()) << 4 +
+               std::hash<std::string>()(edge->getName()) << 6;
+    }
+};
+
+struct EdgeEq {
+    size_t operator()(const std::shared_ptr<dumpExecGraphTool::Edge>& lhs,
+                      const std::shared_ptr<dumpExecGraphTool::Edge>& rhs) const {
+        return lhs->getChild() == rhs->getChild() &&
+               lhs->getParent() == rhs->getParent() &&
+               lhs->getName() == rhs->getName();
+    }
+};
 
 void dumpExecGraphTool::ExecGraph::serialize() const {
     const std::vector<std::pair<float, std::string>> painter{
@@ -83,13 +101,7 @@ void dumpExecGraphTool::ExecGraph::serialize() const {
 
     // generate second part of graph
     // unique edges
-    auto uniqueEdges = edges;
-    auto lastEdge = std::unique(uniqueEdges.begin(), uniqueEdges.end(),
-                                [](const std::shared_ptr<Edge>& lhs, const std::shared_ptr<Edge>& rhs) {
-                                    return lhs->getChild() == rhs->getChild() &&
-                                            lhs->getParent() == rhs->getParent();
-                                });
-    uniqueEdges.erase(lastEdge, uniqueEdges.end());
+    std::unordered_set<std::shared_ptr<Edge>, EdgeHash, EdgeEq> uniqueEdges(edges.begin(), edges.end());
     dumpGraphUniq << firstPartGraph.str();
     for (const auto& edge : uniqueEdges) {
         dumpGraphUniq << "N" << edge->getParent() << " -> N" << edge->getChild()
