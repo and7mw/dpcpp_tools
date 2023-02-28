@@ -177,10 +177,20 @@ xptiUtils::perTaskStatistic xptiUtils::getPerTaskStatistic(
         // TODO: fix
         metadata += /*"[" + taskMetadata.at(xptiUtils::DEVICE_TYPE) + "]" +*/ taskStat.deviceName + "\n";
         metadata += "Order: ";
-        for (size_t i = 0; i < taskStat.order.size(); i++) {
-            metadata += std::to_string(taskStat.order[i]);
-            if (i != taskStat.order.size() - 1) {
-                metadata += ", ";
+        if (taskStat.order.size() >= 7) {
+            metadata += std::to_string(taskStat.order[0]) + ", ";
+            metadata += std::to_string(taskStat.order[1]) + ", ";
+            metadata += std::to_string(taskStat.order[2]) + " ... ";
+
+            metadata += std::to_string(taskStat.order[taskStat.order.size() - 3]) + ", ";
+            metadata += std::to_string(taskStat.order[taskStat.order.size() - 2]) + ", ";
+            metadata += std::to_string(taskStat.order[taskStat.order.size() - 1]);
+        } else {
+            for (size_t i = 0; i < taskStat.order.size(); i++) {
+                metadata += std::to_string(taskStat.order[i]);
+                if (i != taskStat.order.size() - 1) {
+                    metadata += ", ";
+                }
             }
         }
         metadata += "\n";
