@@ -12,6 +12,7 @@
 #include <algorithm>
 #include <vector>
 #include <iomanip>
+#include <sstream>
 
 profilerTool::piApiCollector* piApiCollectorObj = nullptr;
 profilerTool::syclCollector* syclCollectorObj = nullptr;
@@ -85,8 +86,6 @@ XPTI_CALLBACK_API void xptiTraceInit(unsigned int major_version,
     }
 }
 
-XPTI_CALLBACK_API void xptiTraceFinish(const char *stream_name) {}
-
 XPTI_CALLBACK_API void piApiCallback(uint16_t trace_type,
                                      xpti::trace_event_data_t *parent,
                                      xpti::trace_event_data_t *event,
@@ -147,13 +146,15 @@ const size_t defaultOffset = 10;
 const size_t typeOffset = defaultOffset + 20;
 const size_t nameOffset = defaultOffset + 50;
 
-void printReport(const std::vector<xptiUtils::profileEntry>& stat, const std::string& type) {
+std::string getReport(const std::vector<xptiUtils::profileEntry>& stat, const std::string& type) {
+    std::stringstream ss;
+    
     std::string typeToPrint = " ";
     for (size_t i = 0; i < stat.size(); i++) {
         if (i == 0) {
             typeToPrint = type + ":";
         }
-        std::cout << std::setw(typeOffset) << typeToPrint
+        ss << std::setw(typeOffset) << typeToPrint
                   << std::fixed << std::setprecision(2)
                   << std::setw(defaultOffset) << stat[i].timePercent << "%"
                   << std::setw(defaultOffset) << stat[i].totalTime
@@ -165,10 +166,13 @@ void printReport(const std::vector<xptiUtils::profileEntry>& stat, const std::st
                   << std::endl;
         typeToPrint = " ";
     }
-    std::cout << std::endl;
+    ss << std::endl;
+
+    return ss.str();
 }
 
-void printSyclReport() {
+std::vector<std::string> getSyclReport() {
+    std::vector<std::string> res_report;
     if (syclCollectorObj != nullptr) {
         const auto& syclReport = syclCollectorObj->getProfileReport();
         for (const auto& device : syclReport) {
@@ -184,35 +188,79 @@ void printSyclReport() {
                 return lhs.totalTime > rhs.totalTime;
             });
 
-            printReport(report, device.first);
+            res_report.push_back(getReport(report, device.first));
         }
         delete syclCollectorObj;
         syclCollectorObj = nullptr;
     }
+
+    return res_report;
 }
 
-void printSyclPiReport() {
+std::string getSyclPiReport() {
+    std::string report;
     if (piApiCollectorObj != nullptr) {
         const auto& piApiReport = piApiCollectorObj->getProfileReport();
 
-        printReport(piApiReport, "PI API calls");
+        report = getReport(piApiReport, "PI API calls");
 
         delete piApiCollectorObj;
         piApiCollectorObj = nullptr;
     }
+    return report;
 }
 
-__attribute__((destructor)) static void fwFinialize() {
-    std::cout << std::setw(typeOffset) << "Type"
-              << std::setw(defaultOffset + 1) << "Time(%)"
-              << std::setw(defaultOffset + 1) << "Time(μs)"
-              << std::setw(defaultOffset + 1) << "Calls"
-              << std::setw(defaultOffset + 1) << "Avg(μs)"
-              << std::setw(defaultOffset + 1) << "Min(μs)"
-              << std::setw(defaultOffset + 1) << "Max(μs)"
-              << std::setw(nameOffset) << "Name"
-              << std::endl;
+int report_printed = 0;
 
-    printSyclReport();
-    printSyclPiReport();
+int sycl_prepared = 0;
+char *sycl_report = nullptr;
+
+int pi_prepared = 0;
+char *pi_report = nullptr;
+
+XPTI_CALLBACK_API void xptiTraceFinish(const char *stream_name) {
+    if (stream_name == std::string(xptiUtils::SYCL_PI_STREAM)) {
+        std::string ret_pi = getSyclPiReport();
+        pi_report = new char[ret_pi.size() + 1];
+        std::memcpy(pi_report, ret_pi.data(), sizeof(char) * ret_pi.size());
+        pi_report[ret_pi.size()] = '\0';
+
+        pi_prepared = 1;
+    } else if (stream_name == std::string(xptiUtils::SYCL_STREAM)) {
+        std::vector<std::string> ret_sycl = getSyclReport();
+
+        size_t alloc_size = 0;
+        for (size_t i = 0; i < ret_sycl.size(); i++) {
+            alloc_size += ret_sycl[i].size();
+        }
+
+        sycl_report = new char[alloc_size + 1];
+        for (size_t i = 0; i < ret_sycl.size(); i++) {
+            std::memcpy(sycl_report + i * ret_sycl[i].size(), ret_sycl[i].data(),
+                        sizeof(char) * ret_sycl[i].size());
+        }
+        sycl_report[alloc_size] = '\0';
+
+        sycl_prepared = 1;
+    }
+
+    if (!report_printed && pi_prepared && sycl_prepared) {
+        std::cout << std::setw(typeOffset) << "Type"
+                  << std::setw(defaultOffset + 1) << "Time(%)"
+                  << std::setw(defaultOffset + 1) << "Time(μs)"
+                  << std::setw(defaultOffset + 1) << "Calls"
+                  << std::setw(defaultOffset + 1) << "Avg(μs)"
+                  << std::setw(defaultOffset + 1) << "Min(μs)"
+                  << std::setw(defaultOffset + 1) << "Max(μs)"
+                  << std::setw(nameOffset) << "Name"
+                  << std::endl;
+
+        std::cout << std::string(sycl_report);
+        std::cout << std::string(pi_report);
+
+        delete [] sycl_report;
+        delete [] pi_report;
+
+        report_printed = 1;
+    }
 }

@@ -23,10 +23,3 @@ inline std::string getPathToRunner() {
 #endif
     return runnerPath;
 }
-
-inline std::vector<std::string> getArgs(int argc, char **argv) {
-    std::vector<std::string> args;
-    
-
-    return args;
-}
