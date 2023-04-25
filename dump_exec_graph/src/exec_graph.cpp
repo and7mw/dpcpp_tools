@@ -81,9 +81,7 @@ void dumpExecGraphTool::ExecGraph::serialize() const {
     }
 
     // open files for dump
-    // TODO: restore
-    // char currDirPath[] = "./";
-    char currDirPath[] = "/home/maxim/master_science_work/";
+    char currDirPath[] = "./";
     char* dumpPath = std::getenv(xptiUtils::GRAPH_DUMP_PATH);
     if (dumpPath == nullptr) {
         dumpPath = currDirPath;

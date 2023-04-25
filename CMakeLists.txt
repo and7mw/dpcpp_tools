@@ -31,6 +31,3 @@ endif()
 
 # utils
 add_subdirectory(utils)
-
-# TODO: remove!
-add_subdirectory(debug_tool)
