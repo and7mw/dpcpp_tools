@@ -20,13 +20,13 @@ if (ENABLE_DUMP_EXEC_GRAPH)
     add_subdirectory(dump_exec_graph)
 endif()
 
-# profiler
-if(NOT DEFINED ENABLE_PROFILER)
-    set(ENABLE_PROFILER ON)
+# hotspots
+if(NOT DEFINED ENABLE_HOTSPOTS)
+    set(ENABLE_HOTSPOTS ON)
 endif()
 
-if (ENABLE_PROFILER)
-    add_subdirectory(profiler)
+if (ENABLE_HOTSPOTS)
+    add_subdirectory(hotspots)
 endif()
 
 # utils
