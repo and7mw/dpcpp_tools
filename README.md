@@ -34,6 +34,8 @@ or manually set following environment variables:
 
 and launch target application.
 
+> Note: for dump_exec_graph tool you can specify path (set GRAPH_DUMP_PATH environment variable) to directory where execution graph will be saved.
+
 ## Validated
 + OS: Ubuntu 18.04
 + DPC++ hash commit: 4043dda356af59d3d88607037955a0728dc0f466
